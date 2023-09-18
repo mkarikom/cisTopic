@@ -2,7 +2,8 @@
 title: "cisTopic on simulated single cell epigenomes from melanoma cell line"
 author: "Carmen Bravo González-Blas, Liesbeth Minnoye, Sara Aibar and Stein Aerts"
 vignette: >
-  %\VignetteIndexEntry{cisTopic: Probabilistic modelling of single cell epigenomes}
+  %\VignetteIndexEntry{cisTopic on simulated single cell epigenomes from melanoma cell line
+  }
   %\VignetteEngine{knitr::rmarkdown}
 output: 
   html_document:

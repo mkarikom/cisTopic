@@ -2,7 +2,7 @@
 title: "cisTopic on 10X 5k PBMCs data set"
 author: "Carmen Bravo González-Blas and Stein Aerts"
 vignette: >
-  %\VignetteIndexEntry{cisTopic: Probabilistic modelling of single cell epigenomes, message=FALSE}
+  %\VignetteIndexEntry{cisTopic on 10X 5k PBMCs data set}
   %\VignetteEngine{knitr::rmarkdown, message=FALSE}
 output: 
   html_document:

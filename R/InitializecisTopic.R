@@ -23,7 +23,7 @@
 #' cisTopicObject <- createcisTopicObjectFrom10Xmatrix(data_folder, metrics)
 #' cisTopicObject
 
-createcisTopicObjectFrom10Xmatrix <- function(
+createcisTopicObjectFrom10XmatrixMulti <- function(
     barcodesFile,
     featuresFile,
     readsfn,
@@ -35,7 +35,7 @@ createcisTopicObjectFrom10Xmatrix <- function(
     keepCountsMatrix = TRUE,
     ...
 ) {
-  print("checking dependencies")
+  print("running multiome data")
   
   if(! "Matrix" %in% installed.packages()){
     stop('Please, install Matrix: \n install.packages("Matrix")')

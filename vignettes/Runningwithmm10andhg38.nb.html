@@ -9,10 +9,10 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Matt Karikomi" />
+<meta name="author" content="Carmen Bravo González-Blas and Stein Aerts" />
 
 
-<title>cisTopic on 10X Multiome data set</title>
+<title>Running GREAT and motif enrichment with mm10 and hg38</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1747,789 +1747,134 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">cisTopic on 10X Multiome data set</h1>
-<h4 class="author">Matt Karikomi</h4>
+<h1 class="title toc-ignore">Running GREAT and motif enrichment with
+mm10 and hg38</h1>
+<h4 class="author">Carmen Bravo González-Blas and Stein Aerts</h4>
 
 </div>
 
 <div id="TOC">
 <ul>
-<li><a href="#building-the-models" id="toc-building-the-models">Building
-the models</a>
+<li><a href="#installation" id="toc-installation">Installation</a>
 <ul>
-<li><a href="#selection-of-the-best-model" id="toc-selection-of-the-best-model">Selection of the best
-model</a></li>
+<li><a href="#r-3.5" id="toc-r-3.5">R &lt; 3.5</a></li>
+<li><a href="#cistopic-package" id="toc-cistopic-package">cisTopic
+package</a></li>
 </ul></li>
-<li><a href="#interpreting-the-models" id="toc-interpreting-the-models">Interpreting the models</a>
-<ul>
-<li><a href="#a.-identification-of-cell-states-using-the-cell-cistopic-distributions" id="toc-a.-identification-of-cell-states-using-the-cell-cistopic-distributions">A.
-Identification of cell states using the cell-cisTopic
-distributions</a></li>
-<li><a href="#b.-analysis-of-the-regulatory-topics" id="toc-b.-analysis-of-the-regulatory-topics">B. Analysis of the
-regulatory topics</a></li>
-</ul></li>
-<li><a href="#references" id="toc-references">References</a></li>
-<li><a href="#sessioninfo" id="toc-sessioninfo">SessionInfo</a></li>
+<li><a href="#running-rgreat-and-rcistarget-with-mm10" id="toc-running-rgreat-and-rcistarget-with-mm10">Running rGREAT and
+RcisTarget with mm10</a></li>
+<li><a href="#running-rgreat-and-rcistarget-with-hg38" id="toc-running-rgreat-and-rcistarget-with-hg38">Running rGREAT and
+RcisTarget with hg38</a></li>
 </ul>
 </div>
 
 <!-- rnb-text-begin -->
 <p><em>Vignette built on Sep 18, 2023 with cisTopic <strong>version
 0.3.0</strong></em>.</p>
+<p>This vignette provides the code to run rGREAT with the hg38 assembly
+and RcisTarget with hg38 and mm10 based on liftover.</p>
+<div id="installation" class="section level1">
+<h1>Installation</h1>
+<div id="r-3.5" class="section level2">
+<h2>R &lt; 3.5</h2>
+<p>If your R version is below 3.5, you will need to install manually the
+following packages:</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2V0d2QoXCIvVXNlcnMvYXUvY29kZS9jaXNUb3BpY1wiKVxuYGBgIn0= -->
-<pre class="r"><code>setwd(&quot;/Users/au/code/cisTopic&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiV2FybmluZzogVGhlIHdvcmtpbmcgZGlyZWN0b3J5IHdhcyBjaGFuZ2VkIHRvIC9Vc2Vycy9hdS9jb2RlL2Npc1RvcGljIGluc2lkZSBhIG5vdGVib29rIGNodW5rLiBUaGUgd29ya2luZyBkaXJlY3Rvcnkgd2lsbCBiZSByZXNldCB3aGVuIHRoZSBjaHVuayBpcyBmaW5pc2hlZCBydW5uaW5nLiBVc2UgdGhlIGtuaXRyIHJvb3QuZGlyIG9wdGlvbiBpbiB0aGUgc2V0dXAgY2h1bmsgdG8gY2hhbmdlIHRoZSB3b3JraW5nIGRpcmVjdG9yeSBmb3Igbm90ZWJvb2sgY2h1bmtzLlxuIn0= -->
-<pre><code>Warning: The working directory was changed to /Users/au/code/cisTopic inside a notebook chunk. The working directory will be reset when the chunk is finished running. Use the knitr root.dir option in the setup chunk to change the working directory for notebook chunks.</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGV2dG9vbHM6OmxvYWRfYWxsKClcbmBgYCJ9 -->
-<pre class="r"><code>devtools::load_all()</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoi4oS5IExvYWRpbmcgY2lzVG9waWNXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmEdlbm9taWNSYW5nZXM6OnNoaWZ04oCZIGJ5IOKAmGRhdGEudGFibGU6OnNoaWZ04oCZIHdoZW4gbG9hZGluZyDigJhjaXNUb3BpY+KAmVdhcm5pbmc6IHJlcGxhY2luZyBwcmV2aW91cyBpbXBvcnQg4oCYZGF0YS50YWJsZTo6bGFzdOKAmSBieSDigJhkcGx5cjo6bGFzdOKAmSB3aGVuIGxvYWRpbmcg4oCYY2lzVG9waWPigJlXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmEdlbm9taWNSYW5nZXM6OnVuaW9u4oCZIGJ5IOKAmGRwbHlyOjp1bmlvbuKAmSB3aGVuIGxvYWRpbmcg4oCYY2lzVG9waWPigJlXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmEdlbm9taWNSYW5nZXM6OmludGVyc2VjdOKAmSBieSDigJhkcGx5cjo6aW50ZXJzZWN04oCZIHdoZW4gbG9hZGluZyDigJhjaXNUb3BpY+KAmVdhcm5pbmc6IHJlcGxhY2luZyBwcmV2aW91cyBpbXBvcnQg4oCYR2Vub21pY1Jhbmdlczo6c2V0ZGlmZuKAmSBieSDigJhkcGx5cjo6c2V0ZGlmZuKAmSB3aGVuIGxvYWRpbmcg4oCYY2lzVG9waWPigJlXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmGRhdGEudGFibGU6OmZpcnN04oCZIGJ5IOKAmGRwbHlyOjpmaXJzdOKAmSB3aGVuIGxvYWRpbmcg4oCYY2lzVG9waWPigJlXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmGRhdGEudGFibGU6OmJldHdlZW7igJkgYnkg4oCYZHBseXI6OmJldHdlZW7igJkgd2hlbiBsb2FkaW5nIOKAmGNpc1RvcGlj4oCZV2FybmluZzogcmVwbGFjaW5nIHByZXZpb3VzIGltcG9ydCDigJhkcGx5cjo6ZmFpbHdpdGjigJkgYnkg4oCYcGx5cjo6ZmFpbHdpdGjigJkgd2hlbiBsb2FkaW5nIOKAmGNpc1RvcGlj4oCZV2FybmluZzogcmVwbGFjaW5nIHByZXZpb3VzIGltcG9ydCDigJhkcGx5cjo6aWTigJkgYnkg4oCYcGx5cjo6aWTigJkgd2hlbiBsb2FkaW5nIOKAmGNpc1RvcGlj4oCZV2FybmluZzogcmVwbGFjaW5nIHByZXZpb3VzIGltcG9ydCDigJhkcGx5cjo6c3VtbWFyaXpl4oCZIGJ5IOKAmHBseXI6OnN1bW1hcml6ZeKAmSB3aGVuIGxvYWRpbmcg4oCYY2lzVG9waWPigJlXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmGRwbHlyOjpjb3VudOKAmSBieSDigJhwbHlyOjpjb3VudOKAmSB3aGVuIGxvYWRpbmcg4oCYY2lzVG9waWPigJlXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmGRwbHlyOjpkZXNj4oCZIGJ5IOKAmHBseXI6OmRlc2PigJkgd2hlbiBsb2FkaW5nIOKAmGNpc1RvcGlj4oCZV2FybmluZzogcmVwbGFjaW5nIHByZXZpb3VzIGltcG9ydCDigJhkcGx5cjo6bXV0YXRl4oCZIGJ5IOKAmHBseXI6Om11dGF0ZeKAmSB3aGVuIGxvYWRpbmcg4oCYY2lzVG9waWPigJlXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmGRwbHlyOjphcnJhbmdl4oCZIGJ5IOKAmHBseXI6OmFycmFuZ2XigJkgd2hlbiBsb2FkaW5nIOKAmGNpc1RvcGlj4oCZV2FybmluZzogcmVwbGFjaW5nIHByZXZpb3VzIGltcG9ydCDigJhkcGx5cjo6cmVuYW1l4oCZIGJ5IOKAmHBseXI6OnJlbmFtZeKAmSB3aGVuIGxvYWRpbmcg4oCYY2lzVG9waWPigJlXYXJuaW5nOiByZXBsYWNpbmcgcHJldmlvdXMgaW1wb3J0IOKAmGRwbHlyOjpzdW1tYXJpc2XigJkgYnkg4oCYcGx5cjo6c3VtbWFyaXNl4oCZIHdoZW4gbG9hZGluZyDigJhjaXNUb3BpY+KAmVxuIn0= -->
-<pre><code>ℹ Loading cisTopicWarning: replacing previous import ‘GenomicRanges::shift’ by ‘data.table::shift’ when loading ‘cisTopic’Warning: replacing previous import ‘data.table::last’ by ‘dplyr::last’ when loading ‘cisTopic’Warning: replacing previous import ‘GenomicRanges::union’ by ‘dplyr::union’ when loading ‘cisTopic’Warning: replacing previous import ‘GenomicRanges::intersect’ by ‘dplyr::intersect’ when loading ‘cisTopic’Warning: replacing previous import ‘GenomicRanges::setdiff’ by ‘dplyr::setdiff’ when loading ‘cisTopic’Warning: replacing previous import ‘data.table::first’ by ‘dplyr::first’ when loading ‘cisTopic’Warning: replacing previous import ‘data.table::between’ by ‘dplyr::between’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::failwith’ by ‘plyr::failwith’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::id’ by ‘plyr::id’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::summarize’ by ‘plyr::summarize’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::count’ by ‘plyr::count’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::desc’ by ‘plyr::desc’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::mutate’ by ‘plyr::mutate’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::arrange’ by ‘plyr::arrange’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::rename’ by ‘plyr::rename’ when loading ‘cisTopic’Warning: replacing previous import ‘dplyr::summarise’ by ‘plyr::summarise’ when loading ‘cisTopic’</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>For initializing the cisTopic object:</p>
-<ul>
-<li><ol style="list-style-type: lower-alpha">
-<li>Starting from the <strong>CellRanger ATAC count matrix</strong>
-[Reference running time (5k cells, 97k regions): 1,5 min]</li>
-</ol></li>
-</ul>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbInBhdGhUbzEwWCA8LSAnL1VzZXJzL2F1L0Rvd25sb2Fkcy8nIiwiYmFyY29kZXNGaWxlIDwtICcvVXNlcnMvYXUvRG93bmxvYWRzL2ZpbHRlcmVkX2ZlYXR1cmVfYmNfbWF0cml4L2JhcmNvZGVzLnRzdi5neiciLCJmZWF0dXJlc0ZpbGUgPC0gJy9Vc2Vycy9hdS9Eb3dubG9hZHMvZmlsdGVyZWRfZmVhdHVyZV9iY19tYXRyaXgvZmVhdHVyZXMudHN2Lmd6JyIsInJlYWRzZm4gPC0gJy9Vc2Vycy9hdS9Eb3dubG9hZHMvZmlsdGVyZWRfZmVhdHVyZV9iY19tYXRyaXgvbWF0cml4Lm10eC5neiciLCJtZXRyaWNzIDwtICcvVXNlcnMvYXUvRG93bmxvYWRzL3Blcl9iYXJjb2RlX21ldHJpY3MuY3N2JyIsImNpc1RvcGljT2JqZWN0IDwtIGNyZWF0ZWNpc1RvcGljT2JqZWN0RnJvbTEwWG1hdHJpeE11bHRpKGJhcmNvZGVzRmlsZT1iYXJjb2Rlc0ZpbGUsIGZlYXR1cmVzRmlsZT1mZWF0dXJlc0ZpbGUsIHJlYWRzZm49cmVhZHNmbiwgbWV0cmljcz1tZXRyaWNzLCBwcm9qZWN0Lm5hbWU9J29yZ2Fub2lkJykiXX0= -->
-<pre class="r"><code>pathTo10X &lt;- &#39;/Users/au/Downloads/&#39;
-barcodesFile &lt;- &#39;/Users/au/Downloads/filtered_feature_bc_matrix/barcodes.tsv.gz&#39;
-featuresFile &lt;- &#39;/Users/au/Downloads/filtered_feature_bc_matrix/features.tsv.gz&#39;
-readsfn &lt;- &#39;/Users/au/Downloads/filtered_feature_bc_matrix/matrix.mtx.gz&#39;
-metrics &lt;- &#39;/Users/au/Downloads/per_barcode_metrics.csv&#39;
-cisTopicObject &lt;- createcisTopicObjectFrom10XmatrixMulti(barcodesFile=barcodesFile, featuresFile=featuresFile, readsfn=readsfn, metrics=metrics, project.name=&#39;organoid&#39;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbImRldnRvb2xzOjppbnN0YWxsX2dpdGh1YihcImFlcnRzbGFiL0FVQ2VsbFwiKSIsImRldnRvb2xzOjppbnN0YWxsX2dpdGh1YihcImFlcnRzbGFiL1JjaXNUYXJnZXRcIikiXX0= -->
+<pre class="r"><code>devtools::install_github(&quot;aertslab/AUCell&quot;)
+devtools::install_github(&quot;aertslab/RcisTarget&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<div id="building-the-models" class="section level2">
-<h2>Building the models</h2>
-<p>The next step in the cisTopic workflow is to use Latent Dirichlet
-Allocation (LDA) for the modelling of cis-regulatory topics. LDA allows
-to derive, from the original high-dimensional and sparse data, (1) the
-probability distributions over the topics for each cell in the data set
-and (2) the probability distributions over the regions for each topic
-(Blei et al., 2003). These distributions indicate, respectively, how
-important a regulatory topic is for a cell, and how important regions
-are for the regulatory topic. Here, we use WarpLDA (Chen et al, 2016),
-in which we assign regions to a certain topic by randomly sampling from
-a distribution where the probability of a region being assigned to a
-topic is proportional to the contributions of that region to the topic
-and the contributions of that topic in a cell, with delayed count
-update.</p>
-<p>To do this, <code>runWarpLDAModels()</code> builds several models
-(e.g. with diferent numbers of topics) using Latent Dirichlet Allocation
-(LDA) on the binary accessibility matrix (automatically stored in the
-initialized <code>cisTopicObject</code>). We can then select the best
-model using <code>selectModel()</code>.</p>
-<p>The main parameters for running the models
-(<code>runWarpLDAModels</code>) are:</p>
-<ul>
-<li><p><strong>Number of topics</strong> (<code>topic</code>): The
-number of topics are usually slightly bigger than the potential cell
-states in the data set. In the case of single cell epigenomics data the
-number of topics is low compared to other implementations (e.g. text
-classification). The running time will be affected by the number of
-topics.</p></li>
-<li><p>The Dirichlet hyperparameters <strong>alpha</strong>
-(<code>topic proportions</code>) and <strong>beta</strong>
-(<code>topic multinomials</code>): <strong>Alpha</strong> affects to the
-topic-cell contributions; a low alpha forces to pick for each cell a few
-topics with significant contribution, while a high alpha allows cells to
-have similar, smooth topic proportions. <strong>Beta</strong> affects to
-the region combinations; the lower the beta, the fewer regions a topic
-will have; the higher the beta, the less distinct these topics will be
-(i.e. there will be more overlap between the topics). By default, we
-select alpha as 50/number of topics and beta as 0.1 (as Griffiths &amp;
-Steyvers, 2004).</p></li>
-</ul>
-<p>In this tutorial, we will test models with 2, 5, 10 to 25, 30, 35, 40
-topics [Reference running time for the example data set (5k cells; ~97k
-regions): 40 minutes].</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiY2lzVG9waWNPYmplY3QgPC0gcnVuV2FycExEQU1vZGVscyhjaXNUb3BpY09iamVjdCwgdG9waWM9YygyLCA1LCAxMDoyNSwgMzAsIDM1LCA0MCksIHNlZWQ9OTg3LCBuQ29yZXM9MjAsIGl0ZXJhdGlvbnMgPSA1MDAsIGFkZE1vZGVscz1GQUxTRSkifQ== -->
-<pre class="r"><code>cisTopicObject &lt;- runWarpLDAModels(cisTopicObject, topic=c(2, 5, 10:25, 30, 35, 40), seed=987, nCores=20, iterations = 500, addModels=FALSE)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjpbInNvdXJjZShcImh0dHBzOi8vYmlvY29uZHVjdG9yLm9yZy9iaW9jTGl0ZS5SXCIpIiwiYmlvY0xpdGUoJ0dlbm9taWNSYW5nZXMnKSJdfQ== -->
+<pre class="r"><code>source(&quot;https://bioconductor.org/biocLite.R&quot;)
+biocLite(&#39;GenomicRanges&#39;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<p><strong>NOTE:</strong> For large data sets, we recommend to use the
-<strong>tmp</strong> parameter, that allows to save models in the
-specified folder as finished. If using these models for filling a
-cisTopicObject later on, you will need to fill the parameters in
-<code>cisTopicObject@calc.params[[&#39;runWarpLDAModels&#39;]]</code> or
-<code>cisTopicObject@calc.params[[&#39;runCGSModels&#39;]]</code> manually:</p>
+</div>
+<div id="cistopic-package" class="section level2">
+<h2>cisTopic package</h2>
+<p>For installing cisTopic run:</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgRm9yIFdhcnBMREEiLCJjaXNUb3BpY09iamVjdEBjYWxjLnBhcmFtc1tbJ3J1bldhcnBMREFNb2RlbHMnXV0kc2VlZCA8LSBzZWVkIiwiY2lzVG9waWNPYmplY3RAY2FsYy5wYXJhbXNbWydydW5XYXJwTERBTW9kZWxzJ11dJGl0ZXJhdGlvbnMgPC0gaXRlcmF0aW9ucyIsImNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuV2FycExEQU1vZGVscyddXSRhbHBoYSA8LSBhbHBoYSIsImNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuV2FycExEQU1vZGVscyddXSRhbHBoYUJ5VG9waWMgPC0gYWxwaGFCeVRvcGljIiwiY2lzVG9waWNPYmplY3RAY2FsYy5wYXJhbXNbWydydW5XYXJwTERBTW9kZWxzJ11dJGJldGEgPC0gYmV0YSIsIiIsIiMgRm9yIENHUyIsImNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuQ0dTTW9kZWxzJ11dJHNlZWQgPC0gc2VlZCIsImNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuQ0dTTW9kZWxzJ11dJGJ1cm5pbiA8LSBidXJuaW4iLCJjaXNUb3BpY09iamVjdEBjYWxjLnBhcmFtc1tbJ3J1bkNHU01vZGVscyddXSRpdGVyYXRpb25zIDwtIGl0ZXJhdGlvbnMiLCJjaXNUb3BpY09iamVjdEBjYWxjLnBhcmFtc1tbJ3J1bkNHU01vZGVscyddXSRhbHBoYSA8LSBhbHBoYSIsImNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuQ0dTTW9kZWxzJ11dJGFscGhhQnlUb3BpYyA8LSBhbHBoYUJ5VG9waWMiLCJjaXNUb3BpY09iamVjdEBjYWxjLnBhcmFtc1tbJ3J1bkNHU01vZGVscyddXSRiZXRhIDwtIGJldGEiXX0= -->
-<pre class="r"><code># For WarpLDA
-cisTopicObject@calc.params[[&#39;runWarpLDAModels&#39;]]$seed &lt;- seed
-cisTopicObject@calc.params[[&#39;runWarpLDAModels&#39;]]$iterations &lt;- iterations
-cisTopicObject@calc.params[[&#39;runWarpLDAModels&#39;]]$alpha &lt;- alpha
-cisTopicObject@calc.params[[&#39;runWarpLDAModels&#39;]]$alphaByTopic &lt;- alphaByTopic
-cisTopicObject@calc.params[[&#39;runWarpLDAModels&#39;]]$beta &lt;- beta
+<!-- rnb-source-begin eyJkYXRhIjoiZGV2dG9vbHM6Omluc3RhbGxfZ2l0aHViKFwiYWVydHNsYWIvY2lzVG9waWNcIikifQ== -->
+<pre class="r"><code>devtools::install_github(&quot;aertslab/cisTopic&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+</div>
+<div id="running-rgreat-and-rcistarget-with-mm10" class="section level1">
+<h1>Running rGREAT and RcisTarget with mm10</h1>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgR1JFQVQgY2FuIHdvcmsgZGlyZWN0bHkgb24gbW0xMCBjb29yZGluYXRlcyIsImNpc1RvcGljT2JqZWN0IDwtIEdSRUFUKGNpc1RvcGljT2JqZWN0LCBnZW5vbWU9J21tMTAnLCBmb2xkX2VucmljaG1lbnQ9MiwgZ2VuZUhpdHM9MSwgc2lnbj0wLjA1LCByZXF1ZXN0X2ludGVydmFsPTEwKSIsIiIsIiMgRm9yIHVzaW5nIFJjaXNUYXJnZXQsIHdlIG5lZWQgdG8gbGlmdG92ZXIgdGhlIGNvb3JkaW5hdGVzIHRvIHRoZSBtbTkgYXNzZW1ibGUiLCJsaWJyYXJ5KFIudXRpbHMpIiwidXJsIDwtIFwiaHR0cDovL2hnZG93bmxvYWQuc29lLnVjc2MuZWR1L2dvbGRlblBhdGgvbW0xMC9saWZ0T3Zlci9tbTEwVG9NbTkub3Zlci5jaGFpbi5nelwiIiwibW0xMFRvbW05LmNoYWluIDwtIFwibW0xMFRvbW05Lm92ZXIuY2hhaW5cIiIsImRvd25sb2FkLmZpbGUodXJsLCBkZXN0ZmlsZSA9IHBhc3RlMChtbTEwVG9tbTkuY2hhaW4sIFwiLmd6XCIpKSIsImd1bnppcChwYXN0ZTAobW0xMFRvbW05LmNoYWluLCBcIi5nelwiKSkiLCIiLCIjIEltcG9ydCBjaGFpbiBmaWxlIiwibW0xMFRvbW05LmNoYWluICA8LSBpbXBvcnQuY2hhaW4obW0xMFRvbW05LmNoYWluKSIsIiIsIiMgT2J0YWluIGxpZnRPdmVyIGRpY3Rpb25hcnkgKGFzIGxpc3QpIiwibW0xMF9jb29yZCA8LSBjaXNUb3BpY09iamVjdEByZWdpb24ucmFuZ2VzIiwibW0xMF90b19tbTlfbGlzdCA8LSBsaWZ0T3ZlcihtbTEwX2Nvb3JkLCBtbTEwVG9tbTkuY2hhaW4pIiwiIiwiIyBSdW4gR1JFQVQgYmFzZWQgb24gbGlmdG92ZXIgdG8gbW05IGNvb3JkaW5hdGVzIiwiY2lzVG9waWNPYmplY3QgPC0gYmluYXJpemVkY2lzVG9waWNzVG9DdHgoY2lzVG9waWNPYmplY3QsIGxpZnRPdmVyPW1tMTBfdG9fbW05X2xpc3QsIGdlbm9tZT0nbW05JykiLCJjaXNUb3BpY09iamVjdCA8LSBzY29yZWRSZWdpb25zVG9DdHgoY2lzVG9waWNPYmplY3QsIGxpZnRPdmVyPW1tMTBfdG9fbW05X2xpc3QsIGdlbm9tZT0nbW05JykiLCJwYXRoVG9GZWF0aGVyIDwtICdtbTktREhTX2VuaF9wcm9tX3Blbm5zdGF0ZS05c3BlY2llcy5hbGxfcmVnaW9ucy5tYzluci5mZWF0aGVyJyIsImNpc1RvcGljT2JqZWN0IDwtIHRvcGljc1JjaXNUYXJnZXQoY2lzVG9waWNPYmplY3QsIGdlbm9tZT0nbW05JywgcGF0aFRvRmVhdGhlciwgcmVkdWNlZF9kYXRhYmFzZT1GQUxTRSwgbmVzVGhyZXNob2xkPTMsIHJvY3Rocj0wLjAwNSwgbWF4UmFuaz0yMDAwMCwgbkNvcmVzPTQpIiwiY2lzVG9waWNPYmplY3Q8LSBnZXRDaXN0cm9tZXMoY2lzVG9waWNPYmplY3QsIGFubm90YXRpb24gPSAnQm90aCcsIG5Db3Jlcz01KSJdfQ== -->
+<pre class="r"><code># GREAT can work directly on mm10 coordinates
+cisTopicObject &lt;- GREAT(cisTopicObject, genome=&#39;mm10&#39;, fold_enrichment=2, geneHits=1, sign=0.05, request_interval=10)
 
-# For CGS
-cisTopicObject@calc.params[[&#39;runCGSModels&#39;]]$seed &lt;- seed
-cisTopicObject@calc.params[[&#39;runCGSModels&#39;]]$burnin &lt;- burnin
-cisTopicObject@calc.params[[&#39;runCGSModels&#39;]]$iterations &lt;- iterations
-cisTopicObject@calc.params[[&#39;runCGSModels&#39;]]$alpha &lt;- alpha
-cisTopicObject@calc.params[[&#39;runCGSModels&#39;]]$alphaByTopic &lt;- alphaByTopic
-cisTopicObject@calc.params[[&#39;runCGSModels&#39;]]$beta &lt;- beta</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<div id="selection-of-the-best-model" class="section level3">
-<h3>Selection of the best model</h3>
-<p>In this version of cisTopic, we incorporate three different
-approaches to select the best topic:</p>
-<ul>
-<li><p>The log likelihood can be used to estimate the plausibility of a
-model parameter value, given the observed data (i.e. the highest the
-likelihood, the better the model). This is not recommended when running
-WarpLDA, as the curves stabilize rather than reaching a
-maximum.</p></li>
-<li><p>The second derivative in each point of the likelihood curve, as
-it measures the changed in the curvature from point to point (i.e. the
-highest the second derivative means that the next model is not improving
-much more the log-likelihood) . This is not recommended when running
-CGS, as the curves tend to be noisier or reach a maximum. This is the
-default in this version of cisTopic.</p></li>
-<li><p>The perplexity of each model (only for WarpLDA models) measures
-how well the model predicts the sample. The lower the perplexity is, the
-better the model.</p></li>
-</ul>
-<p>Alternatively, you can also manually select the number of topics with
-the parameter <code>select</code>.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFyKG1mcm93PWMoMywzKSlcbmNpc1RvcGljT2JqZWN0IDwtIHNlbGVjdE1vZGVsKGNpc1RvcGljT2JqZWN0LCB0eXBlPSdtYXhpbXVtJylcbmNpc1RvcGljT2JqZWN0IDwtIHNlbGVjdE1vZGVsKGNpc1RvcGljT2JqZWN0LCB0eXBlPSdwZXJwbGV4aXR5JylcbmNpc1RvcGljT2JqZWN0IDwtIHNlbGVjdE1vZGVsKGNpc1RvcGljT2JqZWN0LCB0eXBlPSdkZXJpdmF0aXZlJylcbmBgYCJ9 -->
-<pre class="r"><code>par(mfrow=c(3,3))
-cisTopicObject &lt;- selectModel(cisTopicObject, type=&#39;maximum&#39;)
-cisTopicObject &lt;- selectModel(cisTopicObject, type=&#39;perplexity&#39;)
-cisTopicObject &lt;- selectModel(cisTopicObject, type=&#39;derivative&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>In this case we select the model based on the second derivative, with
-25 topics.</p>
-</div>
-</div>
-<div id="interpreting-the-models" class="section level2">
-<h2>Interpreting the models</h2>
-<div id="a.-identification-of-cell-states-using-the-cell-cistopic-distributions" class="section level3">
-<h3>A. Identification of cell states using the cell-cisTopic
-distributions</h3>
-<p>LDA returns two distributions that represent (1) the topic
-contributions per cell and (2) the region contribution to a topic. We
-can interpret these values as a dimensinality reduction method, after
-which the data is re-represented as a matrix with cells as columns,
-topics as rows and contributions as values. The recorded topic
-assignments to the cells (not normalised) are stored in
-<code>cisTopicObject@selected.model$document_expects</code> (see
-<code>lda</code> package).</p>
-<p>Different methods can be used for clustering and/or visualization.
-cisTopic includes wrapper functions to easily run Umap, tSNE, diffussion
-maps and PCA (the results are saved in the slot
-<code>@dr$cell</code>):</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbImNpc1RvcGljT2JqZWN0IDwtIHJ1bnRTTkUoY2lzVG9waWNPYmplY3QsIHRhcmdldD0nY2VsbCcsIHNlZWQ9MTIzLCBwY2E9RkFMU0UsIG1ldGhvZD0nUHJvYmFiaWxpdHknKSIsImNpc1RvcGljT2JqZWN0IDwtIHJ1blVtYXAoY2lzVG9waWNPYmplY3QsIHRhcmdldD0nY2VsbCcsIHNlZWQ9MTIzLCBtZXRob2Q9J1Byb2JhYmlsaXR5JykiXX0= -->
-<pre class="r"><code>cisTopicObject &lt;- runtSNE(cisTopicObject, target=&#39;cell&#39;, seed=123, pca=FALSE, method=&#39;Probability&#39;)
-cisTopicObject &lt;- runUmap(cisTopicObject, target=&#39;cell&#39;, seed=123, method=&#39;Probability&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Additionally, we can use the cell-topic matrix to define clusters.
-The user can select the preferred methodology to do this. In this case,
-we will apply a peak density algorithm on the tsne dimensionality
-reduction projections, as in Cusanovich et al. (2018).</p>
-<p>If you want to retrieve the normalised assignments for other
-analyses, you can use the function <code>modelMatSelection</code>:</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2VsbGFzc2lnbiA8LSBtb2RlbE1hdFNlbGVjdGlvbihjaXNUb3BpY09iamVjdCwgJ2NlbGwnLCAnUHJvYmFiaWxpdHknKVxuYGBgIn0= -->
-<pre class="r"><code>cellassign &lt;- modelMatSelection(cisTopicObject, &#39;cell&#39;, &#39;Probability&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2V0LnNlZWQoMTIzKVxubGlicmFyeShSdHNuZSlcbkRSIDwtIFJ0c25lKHQoY2VsbGFzc2lnbiksIHBjYT1GKVxuRFJkaXN0IDwtIGRpc3QoRFIkWSlcbmxpYnJhcnkoZGVuc2l0eUNsdXN0KVxuZGNsdXN0IDwtIGRlbnNpdHlDbHVzdChEUmRpc3QsZ2F1c3NpYW49VClcbmRjbHVzdCA8LSBmaW5kQ2x1c3RlcnMoZGNsdXN0LCByaG8gPSA1MCwgZGVsdGEgPSAyLjUpXG5gYGAifQ== -->
-<pre class="r"><code>set.seed(123)
-library(Rtsne)
-DR &lt;- Rtsne(t(cellassign), pca=F)
-DRdist &lt;- dist(DR$Y)
-library(densityClust)
-dclust &lt;- densityClust(DRdist,gaussian=T)
-dclust &lt;- findClusters(dclust, rho = 50, delta = 2.5)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBDaGVjayB0aHJlc2hvbGRzXG5vcHRpb25zKHJlcHIucGxvdC53aWR0aD02LCByZXByLnBsb3QuaGVpZ2h0PTYpXG5wbG90KGRjbHVzdCRyaG8sZGNsdXN0JGRlbHRhLHBjaD0yMCxjZXg9MC42LHhsYWI9J3JobycsIHlsYWI9J2RlbHRhJylcbnBvaW50cyhkY2x1c3QkcmhvW2RjbHVzdCRwZWFrc10sZGNsdXN0JGRlbHRhW2RjbHVzdCRwZWFrc10sY29sPVwicmVkXCIscGNoPTIwLGNleD0wLjgpXG50ZXh0KGRjbHVzdCRyaG9bZGNsdXN0JHBlYWtzXS0yLGRjbHVzdCRkZWx0YVtkY2x1c3QkcGVha3NdKzEuNSxsYWJlbHM9ZGNsdXN0JGNsdXN0ZXJzW2RjbHVzdCRwZWFrc10pXG5hYmxpbmUodj01MClcbmFibGluZShoPTIuNSlcbmBgYCJ9 -->
-<pre class="r"><code># Check thresholds
-options(repr.plot.width=6, repr.plot.height=6)
-plot(dclust$rho,dclust$delta,pch=20,cex=0.6,xlab=&#39;rho&#39;, ylab=&#39;delta&#39;)
-points(dclust$rho[dclust$peaks],dclust$delta[dclust$peaks],col=&quot;red&quot;,pch=20,cex=0.8)
-text(dclust$rho[dclust$peaks]-2,dclust$delta[dclust$peaks]+1.5,labels=dclust$clusters[dclust$peaks])
-abline(v=50)
-abline(h=2.5)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgQWRkIGNsdXN0ZXIgaW5mb3JtYXRpb24iLCJkZW5zaXR5Q2x1c3QgPC0gZGNsdXN0JGNsdXN0ZXJzIiwiZGVuc2l0eUNsdXN0IDwtIGFzLmRhdGEuZnJhbWUoZGVuc2l0eUNsdXN0KSIsInJvd25hbWVzKGRlbnNpdHlDbHVzdCkgPC0gY2lzVG9waWNPYmplY3RAY2VsbC5uYW1lcyIsImNvbG5hbWVzKGRlbnNpdHlDbHVzdCkgPC0gJ2RlbnNpdHlDbHVzdCciLCJkZW5zaXR5Q2x1c3RbLDFdIDwtIGFzLmZhY3RvcihkZW5zaXR5Q2x1c3RbLDFdKSIsImNpc1RvcGljT2JqZWN0IDwtIGFkZENlbGxNZXRhZGF0YShjaXNUb3BpY09iamVjdCwgZGVuc2l0eUNsdXN0KSJdfQ== -->
-<pre class="r"><code># Add cluster information
-densityClust &lt;- dclust$clusters
-densityClust &lt;- as.data.frame(densityClust)
-rownames(densityClust) &lt;- cisTopicObject@cell.names
-colnames(densityClust) &lt;- &#39;densityClust&#39;
-densityClust[,1] &lt;- as.factor(densityClust[,1])
-cisTopicObject &lt;- addCellMetadata(cisTopicObject, densityClust)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Once calculations are done, cisTopic offers a unified visualization
-function (<code>plotFeatures</code>), which allows to visualize tSNE,
-Umap, diffussion maps, principal components and biplots (in 2/3D),
-colored by metadata and/or topic enrichment.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFyKG1mcm93PWMoMSwyKSlcbnBsb3RGZWF0dXJlcyhjaXNUb3BpY09iamVjdCwgbWV0aG9kPSdVbWFwJywgdGFyZ2V0PSdjZWxsJywgdG9waWNfY29udHI9TlVMTCwgY29sb3JCeT1jKCduQ291bnRzJywgJ25BY2MnLCdkZW5zaXR5Q2x1c3QnLCAnZ3JhcGhCYXNlZENsdXN0ZXJzX0NSQScpLCBjZXgubGVnZW5kID0gMC44LCBmYWN0b3IubWF4PS43NSwgZGltPTIsIGxlZ2VuZD1UUlVFLCBjb2wubG93PSdkYXJrZ3JlZW4nLCBjb2wubWlkPSd5ZWxsb3cnLCBjb2wuaGlnaD0nYnJvd24xJywgaW50ZXJ2YWxzPTEwKVxuYGBgIn0= -->
-<pre class="r"><code>par(mfrow=c(1,2))
-plotFeatures(cisTopicObject, method=&#39;Umap&#39;, target=&#39;cell&#39;, topic_contr=NULL, colorBy=c(&#39;nCounts&#39;, &#39;nAcc&#39;,&#39;densityClust&#39;, &#39;graphBasedClusters_CRA&#39;), cex.legend = 0.8, factor.max=.75, dim=2, legend=TRUE, col.low=&#39;darkgreen&#39;, col.mid=&#39;yellow&#39;, col.high=&#39;brown1&#39;, intervals=10)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>We can also generate a heatmap based on the cell-cisTopic
-distributions.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2VsbFRvcGljSGVhdG1hcChjaXNUb3BpY09iamVjdCwgbWV0aG9kPSdaLXNjb3JlJywgY29sb3JCeT1jKCdkZW5zaXR5Q2x1c3QnKSwgY29sLmxvdyA9IFwiZG9kZ2VyYmx1ZVwiLCBjb2wubWlkID0gXCJmbG9yYWx3aGl0ZVwiLCBjb2wuaGlnaCA9IFwiYnJvd24xXCIpXG5gYGAifQ== -->
-<pre class="r"><code>cellTopicHeatmap(cisTopicObject, method=&#39;Z-score&#39;, colorBy=c(&#39;densityClust&#39;), col.low = &quot;dodgerblue&quot;, col.mid = &quot;floralwhite&quot;, col.high = &quot;brown1&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>To color the Umap by topic score:</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFyKG1mcm93PWMoMiw1KSlcbnBsb3RGZWF0dXJlcyhjaXNUb3BpY09iamVjdCwgbWV0aG9kPSdVbWFwJywgdGFyZ2V0PSdjZWxsJywgdG9waWNfY29udHI9J1Byb2JhYmlsaXR5JywgY29sb3JCeT1OVUxMLCBjZXgubGVnZW5kID0gMC44LCBmYWN0b3IubWF4PS43NSwgZGltPTIsIGxlZ2VuZD1UUlVFKVxuYGBgIn0= -->
-<pre class="r"><code>par(mfrow=c(2,5))
-plotFeatures(cisTopicObject, method=&#39;Umap&#39;, target=&#39;cell&#39;, topic_contr=&#39;Probability&#39;, colorBy=NULL, cex.legend = 0.8, factor.max=.75, dim=2, legend=TRUE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<div id="enrichment-of-epigenomic-signatures-in-the-cells" class="section level4">
-<h4>Enrichment of epigenomic signatures in the cells</h4>
-<p>By multiplying the cell and topic assignments, the likelihood of each
-region in each cell (i.e. predictive distribution). This matrix is
-stored in <code>object@predictive.distribution</code>. These
-distributions can be used to estimate drop-outs and build cell-specific
-region rankings that can be used with <code>AUCell</code> for estimating
-the enrichment of epigenomic signatures within the cells.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoicHJlZC5tYXRyaXggPC0gcHJlZGljdGl2ZURpc3RyaWJ1dGlvbihjaXNUb3BpY09iamVjdCkifQ== -->
-<pre class="r"><code>pred.matrix &lt;- predictiveDistribution(cisTopicObject)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>For example, we can evaluate which cells are more enriched for
-certain ChIP-seq signatures. First, epigenomic regions are intersected
-and mapped to regions in the dataset (by default, with at least 40%
-overlap). To test the enrichment of these signatures in each cell, we
-use a GSEA-like recovery curve ranking-based approach. In each cell,
-regions are ranked based on their probability (x-axis), and when a
-region is present in the signature we increase one step in the y-axis.
-The Area Under the Curve (AUC) is used to evaluate the importance of
-that signature within that cell. The corresponding overlapping sets
-(which are stored in <code>object@signatures</code>) are used as input,
-together with the cell-specific region rankings, for the function
-<code>signatureCellEnrichment</code>. AUC values for each specific
-signature are stored in <code>object@cell.data</code>. In this case, we
-can use bulk signatures from the hematopoietic system from Corces et
-al. (2016).</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgT2J0YWluIHNpZ25hdHVyZXMiLCJwYXRoX3RvX3NpZ25hdHVyZXMgPC0gcGFzdGUwKHBhdGhUbzEwWCwgJ0J1bGtfcGVha3MvJykiLCJCdWxrX0FUQUNfc2lnbmF0dXJlcyA8LSBwYXN0ZShwYXRoX3RvX3NpZ25hdHVyZXMsIGxpc3QuZmlsZXMocGF0aF90b19zaWduYXR1cmVzKSwgc2VwPScnKSIsImxhYmVscyAgPC0gZ3N1YignLl9wZWFrcy5uYXJyb3dQZWFrJywgJycsIGxpc3QuZmlsZXMocGF0aF90b19zaWduYXR1cmVzKSkiLCJjaXNUb3BpY09iamVjdCA8LSBnZXRTaWduYXR1cmVzUmVnaW9ucyhjaXNUb3BpY09iamVjdCwgQnVsa19BVEFDX3NpZ25hdHVyZXMsIGxhYmVscz1sYWJlbHMsIG1pbk92ZXJsYXAgPSAwLjQpIiwiIiwiIyBUbyBvbmx5IGtlZXAgdW5pcXVlIHBlYWtzIHBlciBzaWduYXR1cmUiLCJjaXNUb3BpY09iamVjdEBzaWduYXR1cmVzIDwtIGxscGx5KDE6bGVuZ3RoKGNpc1RvcGljT2JqZWN0QHNpZ25hdHVyZXMpLCBmdW5jdGlvbiAoaSkgY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlc1tbaV1dWy13aGljaChjaXNUb3BpY09iamVjdEBzaWduYXR1cmVzW1tpXV0gJWluJSB1bmxpc3QoYXMudmVjdG9yKGNpc1RvcGljT2JqZWN0QHNpZ25hdHVyZXNbLWldKSkpXSkgIiwibmFtZXMoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlcykgPC0gbGFiZWxzIl19 -->
-<pre class="r"><code># Obtain signatures
-path_to_signatures &lt;- paste0(pathTo10X, &#39;Bulk_peaks/&#39;)
-Bulk_ATAC_signatures &lt;- paste(path_to_signatures, list.files(path_to_signatures), sep=&#39;&#39;)
-labels  &lt;- gsub(&#39;._peaks.narrowPeak&#39;, &#39;&#39;, list.files(path_to_signatures))
-cisTopicObject &lt;- getSignaturesRegions(cisTopicObject, Bulk_ATAC_signatures, labels=labels, minOverlap = 0.4)
+# For using RcisTarget, we need to liftover the coordinates to the mm9 assemble
+library(R.utils)
+url &lt;- &quot;http://hgdownload.soe.ucsc.edu/goldenPath/mm10/liftOver/mm10ToMm9.over.chain.gz&quot;
+mm10Tomm9.chain &lt;- &quot;mm10Tomm9.over.chain&quot;
+download.file(url, destfile = paste0(mm10Tomm9.chain, &quot;.gz&quot;))
+gunzip(paste0(mm10Tomm9.chain, &quot;.gz&quot;))
 
-# To only keep unique peaks per signature
-cisTopicObject@signatures &lt;- llply(1:length(cisTopicObject@signatures), function (i) cisTopicObject@signatures[[i]][-which(cisTopicObject@signatures[[i]] %in% unlist(as.vector(cisTopicObject@signatures[-i])))]) 
-names(cisTopicObject@signatures) &lt;- labels</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29tcHV0ZSBjZWxsIHJhbmtpbmdzIiwibGlicmFyeShBVUNlbGwpIiwiYXVjZWxsUmFua2luZ3MgPC0gQVVDZWxsX2J1aWxkUmFua2luZ3MocHJlZC5tYXRyaXgsIHBsb3Q9RkFMU0UsIHZlcmJvc2U9RkFMU0UpIl19 -->
-<pre class="r"><code># Compute cell rankings
-library(AUCell)
-aucellRankings &lt;- AUCell_buildRankings(pred.matrix, plot=FALSE, verbose=FALSE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ2hlY2sgc2lnbmF0dXJlIGVucmljaG1lbnQgaW4gY2VsbHMgKFJlZmVyZW5jZSB0aW1lOiAxIG1pbikiLCJjaXNUb3BpY09iamVjdCA8LSBzaWduYXR1cmVDZWxsRW5yaWNobWVudChjaXNUb3BpY09iamVjdCwgYXVjZWxsUmFua2luZ3MsIHNlbGVjdGVkLnNpZ25hdHVyZXM9J2FsbCcsIGF1Y01heFJhbmsgPSAwLjMqbnJvdyhhdWNlbGxSYW5raW5ncyksIHBsb3Q9RkFMU0UpIl19 -->
-<pre class="r"><code># Check signature enrichment in cells (Reference time: 1 min)
-cisTopicObject &lt;- signatureCellEnrichment(cisTopicObject, aucellRankings, selected.signatures=&#39;all&#39;, aucMaxRank = 0.3*nrow(aucellRankings), plot=FALSE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBQbG90XG5wYXIobWZyb3c9YygyLDIpKVxucGxvdEZlYXR1cmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J1VtYXAnLCB0YXJnZXQ9J2NlbGwnLCB0b3BpY19jb250cj1OVUxMLCBjb2xvckJ5PWMoJ0NENFRjZWxsJywgJ01vbm8nLCAnQmNlbGwnLCAnTktjZWxsJyksIGNleC5sZWdlbmQgPSAwLjQsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGludGVydmFscz0xMClcbmBgYCJ9 -->
-<pre class="r"><code># Plot
-par(mfrow=c(2,2))
-plotFeatures(cisTopicObject, method=&#39;Umap&#39;, target=&#39;cell&#39;, topic_contr=NULL, colorBy=c(&#39;CD4Tcell&#39;, &#39;Mono&#39;, &#39;Bcell&#39;, &#39;NKcell&#39;), cex.legend = 0.4, factor.max=.75, dim=2, legend=TRUE, intervals=10)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p><strong>NOTE</strong>: The predictive distributions and the AUCell
-rankings are not stored in the cisTopic object as they have a big
-size.</p>
-</div>
-</div>
-<div id="b.-analysis-of-the-regulatory-topics" class="section level3">
-<h3>B. Analysis of the regulatory topics</h3>
-<div id="defining-topics" class="section level4">
-<h4>Defining topics</h4>
-<p>To analyze the regions included in the cisTopics, the first step is
-always to derive a score that evaluates how likely is for a region to
-belong to a topic. <code>getRegionsScores()</code> calculates these
-scores based on the proportion of region specific assignments to a
-topic. These scores can be rescaled into the range [0,1], which will be
-useful for the binarization step (as it will force data to follow a
-gamma distribution shape). This information is stored in the
-<code>region.data</code> slot.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiY2lzVG9waWNPYmplY3QgPC0gZ2V0UmVnaW9uc1Njb3JlcyhjaXNUb3BpY09iamVjdCwgbWV0aG9kPSdOb3JtVG9wJywgc2NhbGU9VFJVRSkifQ== -->
-<pre class="r"><code>cisTopicObject &lt;- getRegionsScores(cisTopicObject, method=&#39;NormTop&#39;, scale=TRUE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>BigWig files for observing the scored regions in the genome can be
-generated. Note that information on the length of the chromosomes has to
-be provided. These files can be uploaded in IGV or UCSC for
-visualisation. This information can be easily found in the TxDb objects
-of the corresponding genomes, for example.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbImxpYnJhcnkoVHhEYi5Ic2FwaWVucy5VQ1NDLmhnMTkua25vd25HZW5lKSIsInR4ZGIgPC0gVHhEYi5Ic2FwaWVucy5VQ1NDLmhnMTkua25vd25HZW5lIiwiIiwiZ2V0Qmlnd2lnRmlsZXMoY2lzVG9waWNPYmplY3QsIHBhdGg9J291dHB1dC9jaXNUb3BpY3NfYXNCVycsIHNlcWxlbmd0aHM9c2VxbGVuZ3Rocyh0eGRiKSkiXX0= -->
-<pre class="r"><code>library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-txdb &lt;- TxDb.Hsapiens.UCSC.hg19.knownGene
+# Import chain file
+mm10Tomm9.chain  &lt;- import.chain(mm10Tomm9.chain)
 
-getBigwigFiles(cisTopicObject, path=&#39;output/cisTopics_asBW&#39;, seqlengths=seqlengths(txdb))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>However, many tools are limited to work with sets of regions rather
-than rankings of regions. Keywords, or the most contributing regions in
-a topic, can be used as a representative set of regions of the topic.
-<code>binarizecisTopics()</code> allows to select the top regions based
-on two methods:</p>
-<ol style="list-style-type: lower-alpha">
-<li><p><code>method = &quot;Predefined&quot;</code>: to select a predefined number
-of regions (determined by the <code>cutoffs</code> argument)</p></li>
-<li><p><code>method = &quot;GammaFit&quot;</code> (default): to automatically
-select a threshold based on a fit of the scores to a gamma distribution.
-This is recommended when using <code>method=&quot;NormTop&quot;</code> and
-<code>scale=TRUE</code> in getRegionScores(). Note that the probability
-threshold must be provided by the user and it must be taken after the
-density (based on the fitted gamma distribution) is stabilised (i.e. in
-the tail of the distribution).</p></li>
-</ol>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFyKG1mcm93PWMoMiw1KSlcbmNpc1RvcGljT2JqZWN0IDwtIGJpbmFyaXplY2lzVG9waWNzKGNpc1RvcGljT2JqZWN0LCB0aHJQPTAuOTc1LCBwbG90PVRSVUUpXG5gYGAifQ== -->
-<pre class="r"><code>par(mfrow=c(2,5))
-cisTopicObject &lt;- binarizecisTopics(cisTopicObject, thrP=0.975, plot=TRUE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>The regions sets selected and distributions for each cisTopic can
-then be analized in different ways (examples in next sections). They can
-also be exported to bed files to analyze with external tools:</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiZ2V0QmVkRmlsZXMoY2lzVG9waWNPYmplY3QsIHBhdGg9J291dHB1dC9jaXNUb3BpY3NfYXNCZWQnKSJ9 -->
-<pre class="r"><code>getBedFiles(cisTopicObject, path=&#39;output/cisTopics_asBed&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-<div id="topic-visualization" class="section level4">
-<h4>Topic visualization</h4>
-<p>Based on the topic scores for each region, different methods can be
-used for clustering and/or visualization (as shown for cells). cisTopic
-includes wrapper functions to easily run Umap, tSNE, diffussion maps and
-PCA (the results are saved in the slot <code>@dr$region</code>). In the
-case of regions, only high confidence regions (i.e. that pass the
-binarization threshold at least in 1 topic) are used:</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiY2lzVG9waWNPYmplY3QgPC0gcnVudFNORShjaXNUb3BpY09iamVjdCwgdGFyZ2V0PSdyZWdpb24nLCBwZXJwbGV4aXR5PTIwMCwgY2hlY2tfZHVwbGljYXRlcz1GQUxTRSkifQ== -->
-<pre class="r"><code>cisTopicObject &lt;- runtSNE(cisTopicObject, target=&#39;region&#39;, perplexity=200, check_duplicates=FALSE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>The function <code>plotFeatures</code> can also be used to visualize
-region-based tSNEs, diffussion maps, principal components and biplots
-(in 2/3D), colored by metadata and/or topic enrichment.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGxvdEZlYXR1cmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J3RTTkUnLCB0YXJnZXQ9J3JlZ2lvbicsIHRvcGljX2NvbnRyPU5VTEwsIGNvbG9yQnk9YygnbkNlbGxzJyksIGNleC5sZWdlbmQgPSAwLjgsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGNvbC5sb3c9J2RhcmtncmVlbicsIGNvbC5taWQ9J3llbGxvdycsIGNvbC5oaWdoPSdicm93bjEnLCBpbnRlcnZhbHM9MTApXG5cbnBhcihtZnJvdz1jKDIsNSkpXG5wbG90RmVhdHVyZXMoY2lzVG9waWNPYmplY3QsIG1ldGhvZD0ndFNORScsIHRhcmdldD0ncmVnaW9uJywgdG9waWNfY29udHI9J1otc2NvcmUnLCBjb2xvckJ5PU5VTEwsIGNleC5sZWdlbmQgPSAwLjgsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGNvbC5sb3c9J2RhcmtncmVlbicsIGNvbC5taWQ9J3llbGxvdycsIGNvbC5oaWdoPSdicm93bjEnKVxuYGBgIn0= -->
-<pre class="r"><code>plotFeatures(cisTopicObject, method=&#39;tSNE&#39;, target=&#39;region&#39;, topic_contr=NULL, colorBy=c(&#39;nCells&#39;), cex.legend = 0.8, factor.max=.75, dim=2, legend=TRUE, col.low=&#39;darkgreen&#39;, col.mid=&#39;yellow&#39;, col.high=&#39;brown1&#39;, intervals=10)
+# Obtain liftOver dictionary (as list)
+mm10_coord &lt;- cisTopicObject@region.ranges
+mm10_to_mm9_list &lt;- liftOver(mm10_coord, mm10Tomm9.chain)
 
-par(mfrow=c(2,5))
-plotFeatures(cisTopicObject, method=&#39;tSNE&#39;, target=&#39;region&#39;, topic_contr=&#39;Z-score&#39;, colorBy=NULL, cex.legend = 0.8, factor.max=.75, dim=2, legend=TRUE, col.low=&#39;darkgreen&#39;, col.mid=&#39;yellow&#39;, col.high=&#39;brown1&#39;)</code></pre>
+# Run GREAT based on liftover to mm9 coordinates
+cisTopicObject &lt;- binarizedcisTopicsToCtx(cisTopicObject, liftOver=mm10_to_mm9_list, genome=&#39;mm9&#39;)
+cisTopicObject &lt;- scoredRegionsToCtx(cisTopicObject, liftOver=mm10_to_mm9_list, genome=&#39;mm9&#39;)
+pathToFeather &lt;- &#39;mm9-DHS_enh_prom_pennstate-9species.all_regions.mc9nr.feather&#39;
+cisTopicObject &lt;- topicsRcisTarget(cisTopicObject, genome=&#39;mm9&#39;, pathToFeather, reduced_database=FALSE, nesThreshold=3, rocthr=0.005, maxRank=20000, nCores=4)
+cisTopicObject&lt;- getCistromes(cisTopicObject, annotation = &#39;Both&#39;, nCores=5)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
-<div id="enrichment-of-epigenomic-signatures" class="section level4">
-<h4>Enrichment of epigenomic signatures</h4>
-<p>Another way of exploring the topics is to check their overlap
-(i.e. the regions included in the topics) with predefined epigenomic
-signatures/datasets. For example, regions from ChIP-seq can point
-towards enrichment of binding sites of a given TF, regions from FAIRE-
-or ATAC-seq to regions generally open in a given cell type or tissue,
-etc.</p>
-<p>First, epigenomic regions are intersected and mapped to regions in
-the dataset (by default, with at least 40% overlap). To test the
-enrichment of these signatures in each cell, we use a GSEA-like recovery
-curve ranking-based approach. In each topic, regions are ranked based on
-their topic probability (x-axis), and when a region is present in the
-signature we increase one step in the y-axis. The Area Under the Curve
-(AUC) is used to evaluate the importance of that signature within that
-topic. Signatures are also saved in <code>object@region.data</code> as
-logical columns (<code>TRUE</code> if the region is in the signature,
-otherwise <code>FALSE</code>). A heatmap showing the enrichment scores
-for each topic and signature can be obtained with
-<code>signaturesHeatmap</code>.</p>
+<div id="running-rgreat-and-rcistarget-with-hg38" class="section level1">
+<h1>Running rGREAT and RcisTarget with hg38</h1>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgT2J0YWluIHNpZ25hdHVyZXMgKGlmIGl0IGhhcyBub3QgYmVlbiBydW4gYmVmb3JlKSIsInBhdGhfdG9fc2lnbmF0dXJlcyA8LSBwYXN0ZTAocGF0aFRvMTBYLCAnQnVsa19wZWFrcy8nKSIsIkJ1bGtfQVRBQ19zaWduYXR1cmVzIDwtIHBhc3RlKHBhdGhfdG9fc2lnbmF0dXJlcywgbGlzdC5maWxlcyhwYXRoX3RvX3NpZ25hdHVyZXMpLCBzZXA9JycpIiwibGFiZWxzICA8LSBnc3ViKCcuX3BlYWtzLm5hcnJvd1BlYWsnLCAnJywgbGlzdC5maWxlcyhwYXRoX3RvX3NpZ25hdHVyZXMpKSIsImNpc1RvcGljT2JqZWN0IDwtIGdldFNpZ25hdHVyZXNSZWdpb25zKGNpc1RvcGljT2JqZWN0LCBCdWxrX0FUQUNfc2lnbmF0dXJlcywgbGFiZWxzPWxhYmVscywgbWluT3ZlcmxhcCA9IDAuNCkiLCIiLCIjIFRvIG9ubHkga2VlcCB1bmlxdWUgcGVha3MgcGVyIHNpZ25hdHVyZSIsImNpc1RvcGljT2JqZWN0QHNpZ25hdHVyZXMgPC0gbGxwbHkoMTpsZW5ndGgoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlcyksIGZ1bmN0aW9uIChpKSBjaXNUb3BpY09iamVjdEBzaWduYXR1cmVzW1tpXV1bLXdoaWNoKGNpc1RvcGljT2JqZWN0QHNpZ25hdHVyZXNbW2ldXSAlaW4lIHVubGlzdChhcy52ZWN0b3IoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlc1staV0pKSldKSAiLCJuYW1lcyhjaXNUb3BpY09iamVjdEBzaWduYXR1cmVzKSA8LSBsYWJlbHMiXX0= -->
-<pre class="r"><code># Obtain signatures (if it has not been run before)
-path_to_signatures &lt;- paste0(pathTo10X, &#39;Bulk_peaks/&#39;)
-Bulk_ATAC_signatures &lt;- paste(path_to_signatures, list.files(path_to_signatures), sep=&#39;&#39;)
-labels  &lt;- gsub(&#39;._peaks.narrowPeak&#39;, &#39;&#39;, list.files(path_to_signatures))
-cisTopicObject &lt;- getSignaturesRegions(cisTopicObject, Bulk_ATAC_signatures, labels=labels, minOverlap = 0.4)
+<!-- rnb-source-begin eyJkYXRhIjpbIiMgdXJsIGFuZCBmaWxlIG5hbWUgZm9yIGEgY2hhaW4gZmlsZSIsImxpYnJhcnkoUi51dGlscykiLCJ1cmwgPC0gXCJodHRwOi8vaGdkb3dubG9hZC5zb2UudWNzYy5lZHUvZ29sZGVuUGF0aC9oZzM4L2xpZnRPdmVyL2hnMzhUb0hnMTkub3Zlci5jaGFpbi5nelwiIiwiaGczOFRvSGcxOS5jaGFpbiA8LSBcImRhdGEvaGczOFRvSGcxOS5vdmVyLmNoYWluXCIiLCJkb3dubG9hZC5maWxlKHVybCwgZGVzdGZpbGUgPSBwYXN0ZTAoaGczOFRvSGcxOS5jaGFpbiwgXCIuZ3pcIikpIiwiZ3VuemlwKHBhc3RlMChoZzM4VG9IZzE5LmNoYWluLCBcIi5nelwiKSkiLCIiLCIjIEltcG9ydCBjaGFpbiBmaWxlIiwiaGczOFRvSGcxOS5jaGFpbiA8LSBpbXBvcnQuY2hhaW4oaGczOFRvSGcxOS5jaGFpbikiLCIiLCIjIE9idGFpbiBsaWZ0T3ZlciBkaWN0aW9uYXJ5IChhcyBsaXN0KSIsImhnMzhfY29vcmQgPC0gY2lzVG9waWNPYmplY3RAcmVnaW9uLnJhbmdlcyIsImhnMzhfdG9faGcxOV9saXN0IDwtIGxpZnRPdmVyKGhnMzhfY29vcmQsIGhnMzhUb0hnMTkuY2hhaW4pIiwiIiwiIyBSdW4gR1JFQVQgYmFzZWQgb24gbGlmdG92ZXIgdG8gaGcxOSBjb29yZGluYXRlcyIsImNpc1RvcGljT2JqZWN0IDwtIEdSRUFUKGNpc1RvcGljT2JqZWN0LCBnZW5vbWU9J2hnMTknLCBsaWZ0T3Zlcj1oZzM4X3RvX2hnMTlfbGlzdCwgZm9sZF9lbnJpY2htZW50PTIsIGdlbmVIaXRzPTEsIHNpZ249MC4wNSwgcmVxdWVzdF9pbnRlcnZhbD0xMCkiLCIiLCIjIFJ1biBHUkVBVCBiYXNlZCBvbiBsaWZ0b3ZlciB0byBoZzE5IGNvb3JkaW5hdGVzIiwiY2lzVG9waWNPYmplY3QgPC0gYmluYXJpemVkY2lzVG9waWNzVG9DdHgoY2lzVG9waWNPYmplY3QsIGxpZnRPdmVyPWhnMzhfdG9faGcxOV9saXN0LCBnZW5vbWU9XCJoZzE5XCIpIiwiY2lzVG9waWNPYmplY3QgPC0gc2NvcmVkUmVnaW9uc1RvQ3R4KGNpc1RvcGljT2JqZWN0LCBsaWZ0T3Zlcj1oZzM4X3RvX2hnMTlfbGlzdCwgZ2Vub21lPVwiaGcxOVwiKSIsInBhdGhUb0ZlYXRoZXIgPC0gXCJoZzE5LXJlZ2lvbnMtMU0tOXNwZWNpZXMuYWxsX3JlZ2lvbnMubWM5bnIuZmVhdGhlclwiIiwiY2lzVG9waWNPYmplY3QgPC0gdG9waWNzUmNpc1RhcmdldChjaXNUb3BpY09iamVjdCwgZ2Vub21lPSdoZzE5JywgcGF0aFRvRmVhdGhlciwgcmVkdWNlZF9kYXRhYmFzZT1GQUxTRSwgbmVzVGhyZXNob2xkPTMsIHJvY3Rocj0wLjAwNSwgbWF4UmFuaz0yMDAwMCwgbkNvcmVzPTEpIiwiY2lzVG9waWNPYmplY3Q8LSBnZXRDaXN0cm9tZXMoY2lzVG9waWNPYmplY3QsIGFubm90YXRpb24gPSAnQm90aCcsIG5Db3Jlcz01KSJdfQ== -->
+<pre class="r"><code># url and file name for a chain file
+library(R.utils)
+url &lt;- &quot;http://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHg19.over.chain.gz&quot;
+hg38ToHg19.chain &lt;- &quot;data/hg38ToHg19.over.chain&quot;
+download.file(url, destfile = paste0(hg38ToHg19.chain, &quot;.gz&quot;))
+gunzip(paste0(hg38ToHg19.chain, &quot;.gz&quot;))
 
-# To only keep unique peaks per signature
-cisTopicObject@signatures &lt;- llply(1:length(cisTopicObject@signatures), function (i) cisTopicObject@signatures[[i]][-which(cisTopicObject@signatures[[i]] %in% unlist(as.vector(cisTopicObject@signatures[-i])))]) 
-names(cisTopicObject@signatures) &lt;- labels</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>We can visualize how these regions are enriched within each topic
-with <code>signaturesHeatmap</code>. With this function, we obtain a
-heatmap showing the row normalised AUC scores.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2lnbmF0dXJlc0hlYXRtYXAoY2lzVG9waWNPYmplY3QpXG5gYGAifQ== -->
-<pre class="r"><code>signaturesHeatmap(cisTopicObject)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-<div id="annotation-to-genes-and-go-terms" class="section level4">
-<h4>Annotation to genes and GO terms</h4>
-<p>Another way of gaining insight on the topics is to link the regions
-to genes, and to determine GO terms (or pathways or any other type of
-gene-set) that are enriched within them. cisTopic provides the function
-<code>annotateRegions()</code> to annotate regions to GO terms using the
-“TxDb” Bioconductor packages (replace
-‘TxDb.Hsapiens.UCSC.hg19.knownGene’ by the appropiate organism package),
-and annotation databases (“OrgDb” packages).</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbImxpYnJhcnkob3JnLkhzLmVnLmRiKSIsImNpc1RvcGljT2JqZWN0IDwtIGFubm90YXRlUmVnaW9ucyhjaXNUb3BpY09iamVjdCwgdHhkYj1UeERiLkhzYXBpZW5zLlVDU0MuaGcxOS5rbm93bkdlbmUsIGFubm9EYj0nb3JnLkhzLmVnLmRiJykiXX0= -->
-<pre class="r"><code>library(org.Hs.eg.db)
-cisTopicObject &lt;- annotateRegions(cisTopicObject, txdb=TxDb.Hsapiens.UCSC.hg19.knownGene, annoDb=&#39;org.Hs.eg.db&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>As we saw before, we can use the region type annotations as region
-sets/signatures to check whether a topic is more enriched in a certain
-type of region. We see that regions that belong to topics that are not
-enriched for any of the cell type specific signatures are promoter
-topics. Additionally, the set of regions that are accessible in a higher
-number of cells are also promoters.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFyKG1mcm93PWMoMSwxKSlcbnNpZ25hdHVyZXNIZWF0bWFwKGNpc1RvcGljT2JqZWN0LCBzZWxlY3RlZC5zaWduYXR1cmVzID0gJ2Fubm90YXRpb24nKVxucGxvdEZlYXR1cmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J3RTTkUnLCB0YXJnZXQ9J3JlZ2lvbicsIHRvcGljX2NvbnRyPU5VTEwsIGNvbG9yQnk9YygnYW5ub3RhdGlvbicpLCBjZXgubGVnZW5kID0gMC44LCBmYWN0b3IubWF4PS43NSwgZGltPTIsIGxlZ2VuZD1UUlVFLCBpbnRlcnZhbHM9MjApXG5gYGAifQ== -->
-<pre class="r"><code>par(mfrow=c(1,1))
-signaturesHeatmap(cisTopicObject, selected.signatures = &#39;annotation&#39;)
-plotFeatures(cisTopicObject, method=&#39;tSNE&#39;, target=&#39;region&#39;, topic_contr=NULL, colorBy=c(&#39;annotation&#39;), cex.legend = 0.8, factor.max=.75, dim=2, legend=TRUE, intervals=20)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>For identifying enriched GO terms per topic, cisTopic provides a
-wrapper over <code>rGREAT</code> (Gu Z, 2017) [Reference running time:
-20 minutes]. The binarised topics (i.e. sets of top regions per topic)
-are used in this step. Results are stored in
-<code>object@binarized.rGREAT</code>.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbImRhdGUoKSIsImNpc1RvcGljT2JqZWN0IDwtIEdSRUFUKGNpc1RvcGljT2JqZWN0LCBnZW5vbWU9J2hnMTknLCBmb2xkX2VucmljaG1lbnQ9MiwgZ2VuZUhpdHM9MSwgc2lnbj0wLjA1LCByZXF1ZXN0X2ludGVydmFsPTEwKSIsImRhdGUoKSJdfQ== -->
-<pre class="r"><code>date()
-cisTopicObject &lt;- GREAT(cisTopicObject, genome=&#39;hg19&#39;, fold_enrichment=2, geneHits=1, sign=0.05, request_interval=10)
-date()</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>We can visualize the enrichment results:</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxub250b2xvZ3lEb3RQbG90KGNpc1RvcGljT2JqZWN0LCB0b3A9NSwgdG9waWNzPWMoNiwxMCksIHZhci55PSduYW1lJywgb3JkZXIuYnk9J0Jpbm9tX0FkanBfQkgnKVxuYGBgIn0= -->
-<pre class="r"><code>ontologyDotPlot(cisTopicObject, top=5, topics=c(6,10), var.y=&#39;name&#39;, order.by=&#39;Binom_Adjp_BH&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-<div id="transcription-factor-motif-enrichment" class="section level4">
-<h4>(Transcription factor) motif enrichment</h4>
-<p>It is also possible to identify enriched motifs within the topics and
-form <em>cistromes</em> (i.e. sets of sequences enriched for a given
-motif). To do this, we use <code>RcisTarget</code> (Aibar et al., 2017).
-The current version provides databases for human (hg19). You can find
-the region-based database at: <a href="https://resources.aertslab.org/cistarget/" class="uri">https://resources.aertslab.org/cistarget/</a></p>
-<p>For this analysis, we first need to convert the cisTopic regions to
-the regions in the databases (“ctx regions”). We can do this in two
-ways:</p>
-<ol style="list-style-type: lower-alpha">
-<li>Binarised, converting the binarised topic to a set of equivalent ctx
-regions (a region can map to more than one ctx region, and all regions
-which overlap more than the given threshold are taken).</li>
-</ol>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiY2lzVG9waWNPYmplY3QgPC0gYmluYXJpemVkY2lzVG9waWNzVG9DdHgoY2lzVG9waWNPYmplY3QsIGdlbm9tZT0naGcxOScpIn0= -->
-<pre class="r"><code>cisTopicObject &lt;- binarizedcisTopicsToCtx(cisTopicObject, genome=&#39;hg19&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Based on the maximum overlap. This is useful if we need to use the
-scores (a region is mapped to its most overlapping ctx region). This
-information is stored in <code>object@region.data</code>.</li>
-</ol>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiY2lzVG9waWNPYmplY3QgPC0gc2NvcmVkUmVnaW9uc1RvQ3R4KGNpc1RvcGljT2JqZWN0LCBnZW5vbWU9J2hnMTknKSJ9 -->
-<pre class="r"><code>cisTopicObject &lt;- scoredRegionsToCtx(cisTopicObject, genome=&#39;hg19&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>We are now ready to run RcisTarget in each topic using the wrapper
-function <code>topicsRcisTarget()</code>. This function uses the
-binarised topic regions converted to ctx regions.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbInBhdGhUb0ZlYXRoZXIgPC0gXCJoZzE5LXJlZ2lvbnMtOXNwZWNpZXMuYWxsX3JlZ2lvbnMubWM4bnIuZmVhdGhlclwiIiwiY2lzVG9waWNPYmplY3QgPC0gdG9waWNzUmNpc1RhcmdldChjaXNUb3BpY09iamVjdCwgZ2Vub21lPSdoZzE5JywgcGF0aFRvRmVhdGhlciwgcmVkdWNlZF9kYXRhYmFzZT1GQUxTRSwgbmVzVGhyZXNob2xkPTMsIHJvY3Rocj0wLjAwNSwgbWF4UmFuaz0yMDAwMCwgbkNvcmVzPTUpIl19 -->
-<pre class="r"><code>pathToFeather &lt;- &quot;hg19-regions-9species.all_regions.mc8nr.feather&quot;
-cisTopicObject &lt;- topicsRcisTarget(cisTopicObject, genome=&#39;hg19&#39;, pathToFeather, reduced_database=FALSE, nesThreshold=3, rocthr=0.005, maxRank=20000, nCores=5)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Once RcisTarget is run, interactive motif enrichment tables can be
-explored (e.g. per topic):</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuVG9waWM2X21vdGlmX2VuciA8LSBjaXNUb3BpY09iamVjdEBiaW5hcml6ZWQuUmNpc1RhcmdldFtbNl1dXG5EVDo6ZGF0YXRhYmxlKFRvcGljNl9tb3RpZl9lbnJbLC1jKFwiZW5yaWNoZWRSZWdpb25zXCIsIFwiVEZfbG93Q29uZlwiKSwgd2l0aD1GQUxTRV0sIGVzY2FwZSA9IEZBTFNFLCBmaWx0ZXI9XCJ0b3BcIiwgb3B0aW9ucz1saXN0KHBhZ2VMZW5ndGg9NSkpXG5gYGAifQ== -->
-<pre class="r"><code>Topic6_motif_enr &lt;- cisTopicObject@binarized.RcisTarget[[6]]
-DT::datatable(Topic6_motif_enr[,-c(&quot;enrichedRegions&quot;, &quot;TF_lowConf&quot;), with=FALSE], escape = FALSE, filter=&quot;top&quot;, options=list(pageLength=5))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuVG9waWMxMF9tb3RpZl9lbnIgPC0gY2lzVG9waWNPYmplY3RAYmluYXJpemVkLlJjaXNUYXJnZXRbWzEwXV1cbkRUOjpkYXRhdGFibGUoVG9waWMxMF9tb3RpZl9lbnJbLC1jKFwiZW5yaWNoZWRSZWdpb25zXCIsIFwiVEZfbG93Q29uZlwiKSwgd2l0aD1GQUxTRV0sIGVzY2FwZSA9IEZBTFNFLCBmaWx0ZXI9XCJ0b3BcIiwgb3B0aW9ucz1saXN0KHBhZ2VMZW5ndGg9NSkpXG5gYGAifQ== -->
-<pre class="r"><code>Topic10_motif_enr &lt;- cisTopicObject@binarized.RcisTarget[[10]]
-DT::datatable(Topic10_motif_enr[,-c(&quot;enrichedRegions&quot;, &quot;TF_lowConf&quot;), with=FALSE], escape = FALSE, filter=&quot;top&quot;, options=list(pageLength=5))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>We find SPI1 and CEBPB as master regulators, for example, of the B
-cell and the monocyte topic, respectively.</p>
-<div id="formation-of-cistromes" class="section level5">
-<h5>Formation of cistromes</h5>
-<p>RcisTarget results can be used to form <em>cistromes</em>. We define
-a <strong>cistrome</strong> as a set of sequences enriched for motifs
-linked to a certain transcription factor. In the case of cisTopic, we
-build topic-specific cistromes. cisTopic produces 3 different types of
-cistromes: ctx-regions based, original-regions based and gene based
-(based on region annotation). The <strong>annotation</strong> parameter
-decides whether only motifs linked with high confidence should be used
-or also motifs indirectly annotated should be considered (i.e. in this
-case, the *_extended cistromes will contain both annotations).</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiY2lzVG9waWNPYmplY3QgPC0gZ2V0Q2lzdHJvbWVzKGNpc1RvcGljT2JqZWN0LCBhbm5vdGF0aW9uID0gJ0JvdGgnLCBuQ29yZXM9NSkifQ== -->
-<pre class="r"><code>cisTopicObject &lt;- getCistromes(cisTopicObject, annotation = &#39;Both&#39;, nCores=5)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Cistromes are useful to compare regions linked to a TF which have
-different spatio-temporal patterns, which may be caused i.e. by the
-presence of co-factors or different concentrations of the TF.
-Importantly, we can also estimate and visualize the enrichment of these
-topic specific cistromes in the cells (as shown above). For example,
-below we show the different enrichment pattern of cell type-specific
-SPI1 regions.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbIiMgQ29tcHV0ZSBBVUMgcmFua2luZ3MgYmFzZWQgb24gdGhlIHByZWRpY3RpdmUgZGlzdHJpYnV0aW9uIiwicHJlZC5tYXRyaXggPC0gcHJlZGljdGl2ZURpc3RyaWJ1dGlvbihjaXNUb3BpY09iamVjdCkiLCIiLCJsaWJyYXJ5KEFVQ2VsbCkiLCJhdWNlbGxSYW5raW5ncyA8LSBBVUNlbGxfYnVpbGRSYW5raW5ncyhwcmVkLm1hdHJpeCwgcGxvdD1GQUxTRSwgdmVyYm9zZT1GQUxTRSkiXX0= -->
-<pre class="r"><code># Compute AUC rankings based on the predictive distribution
-pred.matrix &lt;- predictiveDistribution(cisTopicObject)
+# Import chain file
+hg38ToHg19.chain &lt;- import.chain(hg38ToHg19.chain)
 
-library(AUCell)
-aucellRankings &lt;- AUCell_buildRankings(pred.matrix, plot=FALSE, verbose=FALSE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbImNpc1RvcGljT2JqZWN0IDwtIGdldENpc3Ryb21lRW5yaWNobWVudChjaXNUb3BpY09iamVjdCwgdG9waWM9NiwgVEZuYW1lPSdTUEkxJywgYXVjZWxsUmFua2luZ3MgPSBhdWNlbGxSYW5raW5ncywgYXVjTWF4UmFuayA9IDAuMDUqbnJvdyhhdWNlbGxSYW5raW5ncyksIHBsb3Q9RkFMU0UpIiwiY2lzVG9waWNPYmplY3QgPC0gZ2V0Q2lzdHJvbWVFbnJpY2htZW50KGNpc1RvcGljT2JqZWN0LCB0b3BpYz0xMCwgVEZuYW1lPSdTUEkxJywgYXVjZWxsUmFua2luZ3MgPSBhdWNlbGxSYW5raW5ncywgYXVjTWF4UmFuayA9IDAuMDUqbnJvdyhhdWNlbGxSYW5raW5ncyksIHBsb3Q9RkFMU0UpIl19 -->
-<pre class="r"><code>cisTopicObject &lt;- getCistromeEnrichment(cisTopicObject, topic=6, TFname=&#39;SPI1&#39;, aucellRankings = aucellRankings, aucMaxRank = 0.05*nrow(aucellRankings), plot=FALSE)
-cisTopicObject &lt;- getCistromeEnrichment(cisTopicObject, topic=10, TFname=&#39;SPI1&#39;, aucellRankings = aucellRankings, aucMaxRank = 0.05*nrow(aucellRankings), plot=FALSE)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFyKG1mcm93PWMoMSwyKSlcbnBsb3RGZWF0dXJlcyhjaXNUb3BpY09iamVjdCwgbWV0aG9kPSdVbWFwJywgdGFyZ2V0PSdjZWxsJywgdG9waWNfY29udHI9TlVMTCwgY29sb3JCeT1jKCdUb3BpYzZfU1BJMSAoNzUxcCknLCdUb3BpYzEwX1NQSTEgKDU4N3ApJyksIGNleC5sZWdlbmQgPSAwLjgsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGludGVydmFscz0xMClcbmBgYCJ9 -->
-<pre class="r"><code>par(mfrow=c(1,2))
-plotFeatures(cisTopicObject, method=&#39;Umap&#39;, target=&#39;cell&#39;, topic_contr=NULL, colorBy=c(&#39;Topic6_SPI1 (751p)&#39;,&#39;Topic10_SPI1 (587p)&#39;), cex.legend = 0.8, factor.max=.75, dim=2, legend=TRUE, intervals=10)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Differential motif enrichment can be performed using RSAT or Homer
-(Medina-Rivera <em>et al</em>, 2015; Heinz <em>et al</em>, 2017); and
-shape features can be modelled per sequence using GBshape bigwig files
-(Chiu <em>et al.</em>, 2015). These features can be used as input to
-Machine Learning methods (i.e. Random Forest) to determine their
-relevance in generating the different patterns.</p>
-</div>
-<div id="gene-accessibility-scores" class="section level5">
-<h5>Gene accessibility scores</h5>
-<p>We can also evaluate the overall accessibility around certain markers
-using the predictive distribution. In this case, we will sum the
-probability of each region linked to each marker gene (based on
-ChIPseeker annotations in this tutorial).</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjpbInJlZ2lvbjJnZW5lIDwtIGNpc1RvcGljT2JqZWN0QHJlZ2lvbi5kYXRhWywnU1lNQk9MJywgZHJvcD1GQUxTRV0iLCJyZWdpb24yZ2VuZSA8LSBzcGxpdChyZWdpb24yZ2VuZSwgcmVnaW9uMmdlbmVbLCdTWU1CT0wnXSkgIiwicmVnaW9uMmdlbmUgPC0gbGFwcGx5KHJlZ2lvbjJnZW5lLCByb3duYW1lcykgIiwiIiwiIyBGcm9tIHByZXRyYWluZWQgR2FybmV0dCdzIG1vZGVsIG1hcmtlcnMgb24gcEJNQyBkYXRhc2V0IGZyb20gMTBYIChQbGluZXIgZXQgYWwsIDIwMTkpIiwic2VsZWN0ZWRHZW5lcyA8LSBjKCdDRDM0JywgJ1RIWTEnLCAnRU5HJywgJ0tJVCcsICdQUk9NMScsICNDRDM0KyIsIiAgICAgICAgICAgICAgICAgICAnTkNBTTEnLCAnRkNHUjNBJywgI05LY2VsbHMiLCIgICAgICAgICAgICAgICAgICAgJ0NEMTQnLCAnRkNHUjFBJywgJ0NENjgnLCAnUzEwMEExMicsICNNb25vY3l0ZXMiLCIgICAgICAgICAgICAgICAgICAgJ0NEMTknLCAnTVM0QTEnLCAnQ0Q3OUEnLCAjQmNlbGxzIiwiICAgICAgICAgICAgICAgICAgICdDRDNEJywgJ0NEM0UnLCAnQ0QzRycsICNUY2VsbHMiLCIgICAgICAgICAgICAgICAgICAgJ0NENCcsICdGT1hQMycsICdJTDJSQScsICdJTDdSJywgI0NENCBUY2VsbCIsIiAgICAgICAgICAgICAgICAgICAnQ0Q4QScsICdDRDhCJywgI0NEOCBUY2VsbCIsIiAgICAgICAgICAgICAgICAgICAnSUwzUkEnLCAnQ0QxQycsICdCQVRGMycsICdUSEJEJywgJ0NEMjA5JyAjRGVuZHJpdGljIGNlbGxzIiwiICAgICAgICAgICAgICAgICAgICkiLCJyZWdpb24yZ2VuZV9zdWJzZXQgPC0gcmVnaW9uMmdlbmVbd2hpY2gobmFtZXMocmVnaW9uMmdlbmUpICVpbiUgc2VsZWN0ZWRHZW5lcyldIiwicHJlZE1hdFN1bUJ5R2VuZSA8LSBzYXBwbHkocmVnaW9uMmdlbmVfc3Vic2V0LCBmdW5jdGlvbih4KSBhcHBseShwcmVkLm1hdHJpeFt4LCwgZHJvcD1GXSwgMiwgc3VtKSkiLCJyb3duYW1lcyhwcmVkTWF0U3VtQnlHZW5lKSA8LSBjaXNUb3BpY09iamVjdEBjZWxsLm5hbWVzIiwiIyBBZGQgdG8gY2VsbCBkYXRhIiwiY2lzVG9waWNPYmplY3QgPC0gYWRkQ2VsbE1ldGFkYXRhKGNpc1RvcGljT2JqZWN0LCBwcmVkTWF0U3VtQnlHZW5lKSJdfQ== -->
-<pre class="r"><code>region2gene &lt;- cisTopicObject@region.data[,&#39;SYMBOL&#39;, drop=FALSE]
-region2gene &lt;- split(region2gene, region2gene[,&#39;SYMBOL&#39;]) 
-region2gene &lt;- lapply(region2gene, rownames) 
+# Obtain liftOver dictionary (as list)
+hg38_coord &lt;- cisTopicObject@region.ranges
+hg38_to_hg19_list &lt;- liftOver(hg38_coord, hg38ToHg19.chain)
 
-# From pretrained Garnett&#39;s model markers on pBMC dataset from 10X (Pliner et al, 2019)
-selectedGenes &lt;- c(&#39;CD34&#39;, &#39;THY1&#39;, &#39;ENG&#39;, &#39;KIT&#39;, &#39;PROM1&#39;, #CD34+
-                   &#39;NCAM1&#39;, &#39;FCGR3A&#39;, #NKcells
-                   &#39;CD14&#39;, &#39;FCGR1A&#39;, &#39;CD68&#39;, &#39;S100A12&#39;, #Monocytes
-                   &#39;CD19&#39;, &#39;MS4A1&#39;, &#39;CD79A&#39;, #Bcells
-                   &#39;CD3D&#39;, &#39;CD3E&#39;, &#39;CD3G&#39;, #Tcells
-                   &#39;CD4&#39;, &#39;FOXP3&#39;, &#39;IL2RA&#39;, &#39;IL7R&#39;, #CD4 Tcell
-                   &#39;CD8A&#39;, &#39;CD8B&#39;, #CD8 Tcell
-                   &#39;IL3RA&#39;, &#39;CD1C&#39;, &#39;BATF3&#39;, &#39;THBD&#39;, &#39;CD209&#39; #Dendritic cells
-                   )
-region2gene_subset &lt;- region2gene[which(names(region2gene) %in% selectedGenes)]
-predMatSumByGene &lt;- sapply(region2gene_subset, function(x) apply(pred.matrix[x,, drop=F], 2, sum))
-rownames(predMatSumByGene) &lt;- cisTopicObject@cell.names
-# Add to cell data
-cisTopicObject &lt;- addCellMetadata(cisTopicObject, predMatSumByGene)</code></pre>
+# Run GREAT based on liftover to hg19 coordinates
+cisTopicObject &lt;- GREAT(cisTopicObject, genome=&#39;hg19&#39;, liftOver=hg38_to_hg19_list, fold_enrichment=2, geneHits=1, sign=0.05, request_interval=10)
+
+# Run GREAT based on liftover to hg19 coordinates
+cisTopicObject &lt;- binarizedcisTopicsToCtx(cisTopicObject, liftOver=hg38_to_hg19_list, genome=&quot;hg19&quot;)
+cisTopicObject &lt;- scoredRegionsToCtx(cisTopicObject, liftOver=hg38_to_hg19_list, genome=&quot;hg19&quot;)
+pathToFeather &lt;- &quot;hg19-regions-1M-9species.all_regions.mc9nr.feather&quot;
+cisTopicObject &lt;- topicsRcisTarget(cisTopicObject, genome=&#39;hg19&#39;, pathToFeather, reduced_database=FALSE, nesThreshold=3, rocthr=0.005, maxRank=20000, nCores=1)
+cisTopicObject&lt;- getCistromes(cisTopicObject, annotation = &#39;Both&#39;, nCores=5)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGFyKG1mcm93PWMoMSwyKSlcbnBsb3RGZWF0dXJlcyhjaXNUb3BpY09iamVjdCwgbWV0aG9kPSdVbWFwJywgdGFyZ2V0PSdjZWxsJywgdG9waWNfY29udHI9TlVMTCwgY29sb3JCeT1jKCdLSVQnLCAnUFJPTTEnLCAnRkNHUjNBJywnQ0QxNCcsJ1MxMDBBMTInLCAnTVM0QTEnLCAnQ0Q3OUEnLCAnQ0QzRCcsICdDRDNFJywgJ0NENCcsICdDRDhBJyksIGNleC5sZWdlbmQgPSAwLjgsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGludGVydmFscz0xMClcbmBgYCJ9 -->
-<pre class="r"><code>par(mfrow=c(1,2))
-plotFeatures(cisTopicObject, method=&#39;Umap&#39;, target=&#39;cell&#39;, topic_contr=NULL, colorBy=c(&#39;KIT&#39;, &#39;PROM1&#39;, &#39;FCGR3A&#39;,&#39;CD14&#39;,&#39;S100A12&#39;, &#39;MS4A1&#39;, &#39;CD79A&#39;, &#39;CD3D&#39;, &#39;CD3E&#39;, &#39;CD4&#39;, &#39;CD8A&#39;), cex.legend = 0.8, factor.max=.75, dim=2, legend=TRUE, intervals=10)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Finally, you can save your cisTopic object:</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoic2F2ZVJEUyhjaXNUb3BpY09iamVjdCwgZmlsZT0nV2FycExEQV9jaXNUb3BpY09iamVjdF9wYm1jLlJkcycpIn0= -->
-<pre class="r"><code>saveRDS(cisTopicObject, file=&#39;WarpLDA_cisTopicObject_pbmc.Rds&#39;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-</div>
-</div>
-</div>
-<div id="references" class="section level1">
-<h1>References</h1>
-<ol style="list-style-type: decimal">
-<li>Blei, D. M., Ng, A. Y., &amp; Jordan, M. I. (2003). Latent dirichlet
-allocation. <em>Journal of machine Learning research</em>, 3(Jan),
-993-1022.</li>
-<li>Steyvers, M., &amp; Griffiths, T. (2007). Probabilistic topic
-models. <em>Handbook of latent semantic analysis</em>, 427(7),
-424-440.</li>
-<li>Chen, J., Li, K., Zhu, J., &amp; Chen, W. (2016). Warplda: a cache
-efficient o (1) algorithm for latent dirichlet allocation.
-<em>Proceedings of the VLDB Endowment</em>, 9(10), 744-755.</li>
-<li>Cusanovich, D. A., Reddington, J. P., Garfield, D. A., Daza, R. M.,
-Aghamirzaie, D., Marco-Ferreres, R., … &amp; Trapnell, C. (2018). The
-cis-regulatory dynamics of embryonic development at single-cell
-resolution. <em>Nature</em>, 555(7697), 538.</li>
-<li>Aibar, S., Bravo González-Blas, C., Moerman, T., Imrichova, H.,
-Hulselmans, G., Rambow, F., … &amp; Atak, Z. K. (2017). SCENIC:
-single-cell regulatory network inference and clustering. <em>Nature
-methods</em>, 14(11), 1083.</li>
-<li>Medina-Rivera, A., Defrance, M., Sand, O., Herrmann, C.,
-Castro-Mondragon, J. A., Delerce, J., … &amp; Staines, D. M. (2015).
-RSAT 2015: regulatory sequence analysis tools. <em>Nucleic acids
-research</em>, 43(W1), W50-W56.</li>
-<li>Heinz, S., Benner, C., Spann, N., Bertolino, E., Lin, Y. C., Laslo,
-P., … &amp; Glass, C. K. (2010). Simple combinations of
-lineage-determining transcription factors prime cis-regulatory elements
-required for macrophage and B cell identities. <em>Molecular cell</em>,
-38(4), 576-589.</li>
-<li>Chiu, T. P., Yang, L., Zhou, T., Main, B. J., Parker, S. C.,
-Nuzhdin, S. V., … &amp; Rohs, R. (2014). GBshape: a genome browser
-database for DNA shape annotations. <em>Nucleic acids research</em>,
-43(D1), D103-D109.</li>
-<li>Pliner, H. A., Shendure, J., &amp; Trapnell, C. (2019). Supervised
-classification enables rapid annotation of cell atlases.
-<em>BioRxiv</em>, 538652.</li>
-</ol>
-</div>
-<div id="sessioninfo" class="section level1">
-<h1>SessionInfo</h1>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2Vzc2lvbkluZm8oKVxuYGBgIn0= -->
-<pre class="r"><code>sessionInfo()</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiY2lzVG9waWMgb24gMTBYIE11bHRpb21lIGRhdGEgc2V0IgphdXRob3I6ICJNYXR0IEthcmlrb21pIgp2aWduZXR0ZTogPgogICVcVmlnbmV0dGVJbmRleEVudHJ5e2Npc1RvcGljOiBQcm9iYWJpbGlzdGljIG1vZGVsbGluZyBvZiBzaW5nbGUgY2VsbCBlcGlnZW5vbWVzfQogICVcVmlnbmV0dGVFbmdpbmV7a25pdHI6OnJtYXJrZG93bn0Kb3V0cHV0OiAKICBodG1sX2RvY3VtZW50OgogICAgdG9jOiB5ZXMKICAgIHRvY19mbG9hdDogeWVzCiAgICBudW1iZXJfc2VjdGlvbnM6IGZhbHNlCiAgcGRmX2RvY3VtZW50OgogICAgdG9jOiB5ZXMKICBodG1sX25vdGVib29rOgogICAgdG9jOiB5ZXMKLS0tCgoqVmlnbmV0dGUgYnVpbHQgb24gYHIgZm9ybWF0KFN5cy50aW1lKCksICIlYiAlZCwgJVkiKWAgd2l0aCBjaXNUb3BpYyAqKnZlcnNpb24gYHIgcGFja2FnZVZlcnNpb24oImNpc1RvcGljIilgKioqLgoKCmBgYHtyfQpzZXR3ZCgiL1VzZXJzL2F1L2NvZGUvY2lzVG9waWMiKQpkZXZ0b29sczo6bG9hZF9hbGwoKQpgYGAKCkZvciBpbml0aWFsaXppbmcgdGhlIGNpc1RvcGljIG9iamVjdDoKCiogYS4gIFN0YXJ0aW5nIGZyb20gdGhlICoqQ2VsbFJhbmdlciBBVEFDIGNvdW50IG1hdHJpeCoqIFtSZWZlcmVuY2UgcnVubmluZyB0aW1lICg1ayBjZWxscywgOTdrIHJlZ2lvbnMpOiAxLDUgbWluXQpgYGB7ciwgZXZhbD1GQUxTRX0KcGF0aFRvMTBYIDwtICcvVXNlcnMvYXUvRG93bmxvYWRzLycKYmFyY29kZXNGaWxlIDwtICcvVXNlcnMvYXUvRG93bmxvYWRzL2ZpbHRlcmVkX2ZlYXR1cmVfYmNfbWF0cml4L2JhcmNvZGVzLnRzdi5neicKZmVhdHVyZXNGaWxlIDwtICcvVXNlcnMvYXUvRG93bmxvYWRzL2ZpbHRlcmVkX2ZlYXR1cmVfYmNfbWF0cml4L2ZlYXR1cmVzLnRzdi5neicKcmVhZHNmbiA8LSAnL1VzZXJzL2F1L0Rvd25sb2Fkcy9maWx0ZXJlZF9mZWF0dXJlX2JjX21hdHJpeC9tYXRyaXgubXR4Lmd6JwptZXRyaWNzIDwtICcvVXNlcnMvYXUvRG93bmxvYWRzL3Blcl9iYXJjb2RlX21ldHJpY3MuY3N2JwpjaXNUb3BpY09iamVjdCA8LSBjcmVhdGVjaXNUb3BpY09iamVjdEZyb20xMFhtYXRyaXhNdWx0aShiYXJjb2Rlc0ZpbGU9YmFyY29kZXNGaWxlLCBmZWF0dXJlc0ZpbGU9ZmVhdHVyZXNGaWxlLCByZWFkc2ZuPXJlYWRzZm4sIG1ldHJpY3M9bWV0cmljcywgcHJvamVjdC5uYW1lPSdvcmdhbm9pZCcpCmBgYAoKIyMgQnVpbGRpbmcgdGhlIG1vZGVscwoKVGhlIG5leHQgc3RlcCBpbiB0aGUgY2lzVG9waWMgd29ya2Zsb3cgaXMgdG8gdXNlIExhdGVudCBEaXJpY2hsZXQgQWxsb2NhdGlvbiAoTERBKSBmb3IgdGhlIG1vZGVsbGluZyBvZiBjaXMtcmVndWxhdG9yeSB0b3BpY3MuIExEQSBhbGxvd3MgdG8gZGVyaXZlLCBmcm9tIHRoZSBvcmlnaW5hbCBoaWdoLWRpbWVuc2lvbmFsIGFuZCBzcGFyc2UgZGF0YSwgKDEpIHRoZSBwcm9iYWJpbGl0eSBkaXN0cmlidXRpb25zIG92ZXIgdGhlIHRvcGljcyBmb3IgZWFjaCBjZWxsIGluIHRoZSBkYXRhIHNldCBhbmQgKDIpIHRoZSBwcm9iYWJpbGl0eSBkaXN0cmlidXRpb25zIG92ZXIgdGhlIHJlZ2lvbnMgZm9yIGVhY2ggdG9waWMgKEJsZWkgZXQgYWwuLCAyMDAzKS4gVGhlc2UgZGlzdHJpYnV0aW9ucyBpbmRpY2F0ZSwgcmVzcGVjdGl2ZWx5LCBob3cgaW1wb3J0YW50IGEgcmVndWxhdG9yeSB0b3BpYyBpcyBmb3IgYSBjZWxsLCBhbmQgaG93IGltcG9ydGFudCByZWdpb25zIGFyZSBmb3IgdGhlIHJlZ3VsYXRvcnkgdG9waWMuIEhlcmUsIHdlIHVzZSBXYXJwTERBIChDaGVuIGV0IGFsLCAyMDE2KSwgaW4gd2hpY2ggd2UgYXNzaWduIHJlZ2lvbnMgdG8gYSBjZXJ0YWluIHRvcGljIGJ5IHJhbmRvbWx5IHNhbXBsaW5nIGZyb20gYSBkaXN0cmlidXRpb24gd2hlcmUgdGhlIHByb2JhYmlsaXR5IG9mIGEgcmVnaW9uIGJlaW5nIGFzc2lnbmVkIHRvIGEgdG9waWMgaXMgcHJvcG9ydGlvbmFsIHRvIHRoZSBjb250cmlidXRpb25zIG9mIHRoYXQgcmVnaW9uIHRvIHRoZSB0b3BpYyBhbmQgdGhlIGNvbnRyaWJ1dGlvbnMgb2YgdGhhdCB0b3BpYyBpbiBhIGNlbGwsIHdpdGggZGVsYXllZCBjb3VudCB1cGRhdGUuCgpUbyBkbyB0aGlzLCBgcnVuV2FycExEQU1vZGVscygpYCBidWlsZHMgc2V2ZXJhbCBtb2RlbHMgKGUuZy4gd2l0aCBkaWZlcmVudCBudW1iZXJzIG9mIHRvcGljcykgdXNpbmcgTGF0ZW50IERpcmljaGxldCBBbGxvY2F0aW9uIChMREEpIG9uIHRoZSBiaW5hcnkgYWNjZXNzaWJpbGl0eSBtYXRyaXggKGF1dG9tYXRpY2FsbHkgc3RvcmVkIGluIHRoZSBpbml0aWFsaXplZCBgY2lzVG9waWNPYmplY3RgKS4gV2UgY2FuIHRoZW4gc2VsZWN0IHRoZSBiZXN0IG1vZGVsIHVzaW5nIGBzZWxlY3RNb2RlbCgpYC4KClRoZSBtYWluIHBhcmFtZXRlcnMgZm9yIHJ1bm5pbmcgdGhlIG1vZGVscyAoYHJ1bldhcnBMREFNb2RlbHNgKSBhcmU6CgoqICoqTnVtYmVyIG9mIHRvcGljcyoqIChgdG9waWNgKTogVGhlIG51bWJlciBvZiB0b3BpY3MgYXJlIHVzdWFsbHkgc2xpZ2h0bHkgYmlnZ2VyIHRoYW4gdGhlIHBvdGVudGlhbCBjZWxsIHN0YXRlcyBpbiB0aGUgZGF0YSBzZXQuIEluIHRoZSBjYXNlIG9mIHNpbmdsZSBjZWxsIGVwaWdlbm9taWNzIGRhdGEgdGhlIG51bWJlciBvZiB0b3BpY3MgaXMgbG93IGNvbXBhcmVkIHRvIG90aGVyIGltcGxlbWVudGF0aW9ucyAoZS5nLiB0ZXh0IGNsYXNzaWZpY2F0aW9uKS4gVGhlIHJ1bm5pbmcgdGltZSB3aWxsIGJlIGFmZmVjdGVkIGJ5IHRoZSBudW1iZXIgb2YgdG9waWNzLgoKKiBUaGUgRGlyaWNobGV0IGh5cGVycGFyYW1ldGVycyAqKmFscGhhKiogKGB0b3BpYyBwcm9wb3J0aW9uc2ApIGFuZCAqKmJldGEqKiAoYHRvcGljIG11bHRpbm9taWFsc2ApOiAqKkFscGhhKiogYWZmZWN0cyB0byB0aGUgdG9waWMtY2VsbCBjb250cmlidXRpb25zOyBhIGxvdyBhbHBoYSBmb3JjZXMgdG8gcGljayBmb3IgZWFjaCBjZWxsIGEgZmV3IHRvcGljcyB3aXRoIHNpZ25pZmljYW50IGNvbnRyaWJ1dGlvbiwgd2hpbGUgYSBoaWdoIGFscGhhIGFsbG93cyBjZWxscyB0byBoYXZlIHNpbWlsYXIsIHNtb290aCB0b3BpYyBwcm9wb3J0aW9ucy4gKipCZXRhKiogYWZmZWN0cyB0byB0aGUgcmVnaW9uIGNvbWJpbmF0aW9uczsgdGhlIGxvd2VyIHRoZSBiZXRhLCB0aGUgZmV3ZXIgcmVnaW9ucyBhIHRvcGljIHdpbGwgaGF2ZTsgdGhlIGhpZ2hlciB0aGUgYmV0YSwgdGhlIGxlc3MgZGlzdGluY3QgdGhlc2UgdG9waWNzIHdpbGwgYmUgKGkuZS4gdGhlcmUgd2lsbCBiZSBtb3JlIG92ZXJsYXAgYmV0d2VlbiB0aGUgdG9waWNzKS4gQnkgZGVmYXVsdCwgd2Ugc2VsZWN0IGFscGhhIGFzIDUwL251bWJlciBvZiB0b3BpY3MgYW5kIGJldGEgYXMgMC4xIChhcyBHcmlmZml0aHMgJiBTdGV5dmVycywgMjAwNCkuCgpJbiB0aGlzIHR1dG9yaWFsLCB3ZSB3aWxsIHRlc3QgbW9kZWxzIHdpdGggMiwgNSwgMTAgdG8gMjUsIDMwLCAzNSwgNDAgdG9waWNzIFtSZWZlcmVuY2UgcnVubmluZyB0aW1lIGZvciB0aGUgZXhhbXBsZSBkYXRhIHNldCAoNWsgY2VsbHM7IH45N2sgcmVnaW9ucyk6IDQwIG1pbnV0ZXNdLgoKYGBge3IsIGV2YWw9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CmNpc1RvcGljT2JqZWN0IDwtIHJ1bldhcnBMREFNb2RlbHMoY2lzVG9waWNPYmplY3QsIHRvcGljPWMoMiwgNSwgMTA6MjUsIDMwLCAzNSwgNDApLCBzZWVkPTk4NywgbkNvcmVzPTIwLCBpdGVyYXRpb25zID0gNTAwLCBhZGRNb2RlbHM9RkFMU0UpCmBgYAoKKipOT1RFOioqIEZvciBsYXJnZSBkYXRhIHNldHMsIHdlIHJlY29tbWVuZCB0byB1c2UgdGhlICoqdG1wKiogcGFyYW1ldGVyLCB0aGF0IGFsbG93cyB0byBzYXZlIG1vZGVscyBpbiB0aGUgc3BlY2lmaWVkIGZvbGRlciBhcyBmaW5pc2hlZC4gSWYgdXNpbmcgdGhlc2UgbW9kZWxzIGZvciBmaWxsaW5nIGEgY2lzVG9waWNPYmplY3QgbGF0ZXIgb24sIHlvdSB3aWxsIG5lZWQgdG8gZmlsbCB0aGUgcGFyYW1ldGVycyBpbiBgY2lzVG9waWNPYmplY3RAY2FsYy5wYXJhbXNbWydydW5XYXJwTERBTW9kZWxzJ11dYCBvciBgY2lzVG9waWNPYmplY3RAY2FsYy5wYXJhbXNbWydydW5DR1NNb2RlbHMnXV1gIG1hbnVhbGx5OgoKYGBge3IsIGV2YWw9RkFMU0UgLCBtZXNzYWdlPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQojIEZvciBXYXJwTERBCmNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuV2FycExEQU1vZGVscyddXSRzZWVkIDwtIHNlZWQKY2lzVG9waWNPYmplY3RAY2FsYy5wYXJhbXNbWydydW5XYXJwTERBTW9kZWxzJ11dJGl0ZXJhdGlvbnMgPC0gaXRlcmF0aW9ucwpjaXNUb3BpY09iamVjdEBjYWxjLnBhcmFtc1tbJ3J1bldhcnBMREFNb2RlbHMnXV0kYWxwaGEgPC0gYWxwaGEKY2lzVG9waWNPYmplY3RAY2FsYy5wYXJhbXNbWydydW5XYXJwTERBTW9kZWxzJ11dJGFscGhhQnlUb3BpYyA8LSBhbHBoYUJ5VG9waWMKY2lzVG9waWNPYmplY3RAY2FsYy5wYXJhbXNbWydydW5XYXJwTERBTW9kZWxzJ11dJGJldGEgPC0gYmV0YQoKIyBGb3IgQ0dTCmNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuQ0dTTW9kZWxzJ11dJHNlZWQgPC0gc2VlZApjaXNUb3BpY09iamVjdEBjYWxjLnBhcmFtc1tbJ3J1bkNHU01vZGVscyddXSRidXJuaW4gPC0gYnVybmluCmNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuQ0dTTW9kZWxzJ11dJGl0ZXJhdGlvbnMgPC0gaXRlcmF0aW9ucwpjaXNUb3BpY09iamVjdEBjYWxjLnBhcmFtc1tbJ3J1bkNHU01vZGVscyddXSRhbHBoYSA8LSBhbHBoYQpjaXNUb3BpY09iamVjdEBjYWxjLnBhcmFtc1tbJ3J1bkNHU01vZGVscyddXSRhbHBoYUJ5VG9waWMgPC0gYWxwaGFCeVRvcGljCmNpc1RvcGljT2JqZWN0QGNhbGMucGFyYW1zW1sncnVuQ0dTTW9kZWxzJ11dJGJldGEgPC0gYmV0YQpgYGAKCgojIyMgU2VsZWN0aW9uIG9mIHRoZSBiZXN0IG1vZGVsCgpJbiB0aGlzIHZlcnNpb24gb2YgY2lzVG9waWMsIHdlIGluY29ycG9yYXRlIHRocmVlIGRpZmZlcmVudCBhcHByb2FjaGVzIHRvIHNlbGVjdCB0aGUgYmVzdCB0b3BpYzoKCi0gVGhlIGxvZyBsaWtlbGlob29kIGNhbiBiZSB1c2VkIHRvIGVzdGltYXRlIHRoZSBwbGF1c2liaWxpdHkgb2YgYSBtb2RlbCBwYXJhbWV0ZXIgdmFsdWUsIGdpdmVuIHRoZSBvYnNlcnZlZCBkYXRhIChpLmUuIHRoZSBoaWdoZXN0IHRoZSBsaWtlbGlob29kLCB0aGUgYmV0dGVyIHRoZSBtb2RlbCkuIFRoaXMgaXMgbm90IHJlY29tbWVuZGVkIHdoZW4gcnVubmluZyBXYXJwTERBLCBhcyB0aGUgY3VydmVzIHN0YWJpbGl6ZSByYXRoZXIgdGhhbiByZWFjaGluZyBhIG1heGltdW0uCgotIFRoZSBzZWNvbmQgZGVyaXZhdGl2ZSBpbiBlYWNoIHBvaW50IG9mIHRoZSBsaWtlbGlob29kIGN1cnZlLCBhcyBpdCBtZWFzdXJlcyB0aGUgY2hhbmdlZCBpbiB0aGUgY3VydmF0dXJlIGZyb20gcG9pbnQgdG8gcG9pbnQgKGkuZS4gdGhlIGhpZ2hlc3QgdGhlIHNlY29uZCBkZXJpdmF0aXZlIG1lYW5zIHRoYXQgdGhlIG5leHQgbW9kZWwgaXMgbm90IGltcHJvdmluZyBtdWNoIG1vcmUgdGhlIGxvZy1saWtlbGlob29kKSAuIFRoaXMgaXMgbm90IHJlY29tbWVuZGVkIHdoZW4gcnVubmluZyBDR1MsIGFzIHRoZSBjdXJ2ZXMgdGVuZCB0byBiZSBub2lzaWVyIG9yIHJlYWNoIGEgbWF4aW11bS4gVGhpcyBpcyB0aGUgZGVmYXVsdCBpbiB0aGlzIHZlcnNpb24gb2YgY2lzVG9waWMuCgotIFRoZSBwZXJwbGV4aXR5IG9mIGVhY2ggbW9kZWwgKG9ubHkgZm9yIFdhcnBMREEgbW9kZWxzKSBtZWFzdXJlcyBob3cgd2VsbCB0aGUgbW9kZWwgcHJlZGljdHMgdGhlIHNhbXBsZS4gVGhlIGxvd2VyIHRoZSBwZXJwbGV4aXR5IGlzLCB0aGUgYmV0dGVyIHRoZSBtb2RlbC4KCkFsdGVybmF0aXZlbHksIHlvdSBjYW4gYWxzbyBtYW51YWxseSBzZWxlY3QgdGhlIG51bWJlciBvZiB0b3BpY3Mgd2l0aCB0aGUgcGFyYW1ldGVyIGBzZWxlY3RgLgoKYGBge3IsIGZpZy5zaG93PSdob2xkJywgZmlnLmFsaWduPSdjZW50ZXInICwgbWVzc2FnZT1GQUxTRSwgbWVzc2FnZT1GQUxTRX0KcGFyKG1mcm93PWMoMywzKSkKY2lzVG9waWNPYmplY3QgPC0gc2VsZWN0TW9kZWwoY2lzVG9waWNPYmplY3QsIHR5cGU9J21heGltdW0nKQpjaXNUb3BpY09iamVjdCA8LSBzZWxlY3RNb2RlbChjaXNUb3BpY09iamVjdCwgdHlwZT0ncGVycGxleGl0eScpCmNpc1RvcGljT2JqZWN0IDwtIHNlbGVjdE1vZGVsKGNpc1RvcGljT2JqZWN0LCB0eXBlPSdkZXJpdmF0aXZlJykKYGBgCgpJbiB0aGlzIGNhc2Ugd2Ugc2VsZWN0IHRoZSBtb2RlbCBiYXNlZCBvbiB0aGUgc2Vjb25kIGRlcml2YXRpdmUsIHdpdGggMjUgdG9waWNzLgoKIyMgSW50ZXJwcmV0aW5nIHRoZSBtb2RlbHMKCiMjIyBBLiBJZGVudGlmaWNhdGlvbiBvZiBjZWxsIHN0YXRlcyB1c2luZyB0aGUgY2VsbC1jaXNUb3BpYyBkaXN0cmlidXRpb25zCgpMREEgcmV0dXJucyB0d28gZGlzdHJpYnV0aW9ucyB0aGF0IHJlcHJlc2VudCAoMSkgdGhlIHRvcGljIGNvbnRyaWJ1dGlvbnMgcGVyIGNlbGwgYW5kICgyKSB0aGUgcmVnaW9uIGNvbnRyaWJ1dGlvbiB0byBhIHRvcGljLiBXZSBjYW4gaW50ZXJwcmV0IHRoZXNlIHZhbHVlcyBhcyBhIGRpbWVuc2luYWxpdHkgcmVkdWN0aW9uIG1ldGhvZCwgYWZ0ZXIgd2hpY2ggdGhlIGRhdGEgaXMgcmUtcmVwcmVzZW50ZWQgYXMgYSBtYXRyaXggd2l0aCBjZWxscyBhcyBjb2x1bW5zLCB0b3BpY3MgYXMgcm93cyBhbmQgY29udHJpYnV0aW9ucyBhcyB2YWx1ZXMuIFRoZSByZWNvcmRlZCB0b3BpYyBhc3NpZ25tZW50cyB0byB0aGUgY2VsbHMgKG5vdCBub3JtYWxpc2VkKSBhcmUgc3RvcmVkIGluIGBjaXNUb3BpY09iamVjdEBzZWxlY3RlZC5tb2RlbCRkb2N1bWVudF9leHBlY3RzYCAoc2VlIGBsZGFgIHBhY2thZ2UpLgoKRGlmZmVyZW50IG1ldGhvZHMgY2FuIGJlIHVzZWQgZm9yIGNsdXN0ZXJpbmcgYW5kL29yIHZpc3VhbGl6YXRpb24uIGNpc1RvcGljIGluY2x1ZGVzIHdyYXBwZXIgZnVuY3Rpb25zIHRvIGVhc2lseSBydW4gVW1hcCwgdFNORSwgZGlmZnVzc2lvbiBtYXBzIGFuZCBQQ0EgKHRoZSByZXN1bHRzIGFyZSBzYXZlZCBpbiB0aGUgc2xvdCBgQGRyJGNlbGxgKToKCmBgYHtyLCBldmFsPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQpjaXNUb3BpY09iamVjdCA8LSBydW50U05FKGNpc1RvcGljT2JqZWN0LCB0YXJnZXQ9J2NlbGwnLCBzZWVkPTEyMywgcGNhPUZBTFNFLCBtZXRob2Q9J1Byb2JhYmlsaXR5JykKY2lzVG9waWNPYmplY3QgPC0gcnVuVW1hcChjaXNUb3BpY09iamVjdCwgdGFyZ2V0PSdjZWxsJywgc2VlZD0xMjMsIG1ldGhvZD0nUHJvYmFiaWxpdHknKQpgYGAKCkFkZGl0aW9uYWxseSwgd2UgY2FuIHVzZSB0aGUgY2VsbC10b3BpYyBtYXRyaXggdG8gZGVmaW5lIGNsdXN0ZXJzLiBUaGUgdXNlciBjYW4gc2VsZWN0IHRoZSBwcmVmZXJyZWQgbWV0aG9kb2xvZ3kgdG8gZG8gdGhpcy4gSW4gdGhpcyBjYXNlLCB3ZSB3aWxsIGFwcGx5IGEgcGVhayBkZW5zaXR5IGFsZ29yaXRobSBvbiB0aGUgdHNuZSBkaW1lbnNpb25hbGl0eSByZWR1Y3Rpb24gcHJvamVjdGlvbnMsIGFzIGluIEN1c2Fub3ZpY2ggZXQgYWwuICgyMDE4KS4KCklmIHlvdSB3YW50IHRvIHJldHJpZXZlIHRoZSBub3JtYWxpc2VkIGFzc2lnbm1lbnRzIGZvciBvdGhlciBhbmFseXNlcywgeW91IGNhbiB1c2UgdGhlIGZ1bmN0aW9uIGBtb2RlbE1hdFNlbGVjdGlvbmA6CgpgYGB7ciwgbWVzc2FnZT1GQUxTRX0KY2VsbGFzc2lnbiA8LSBtb2RlbE1hdFNlbGVjdGlvbihjaXNUb3BpY09iamVjdCwgJ2NlbGwnLCAnUHJvYmFiaWxpdHknKQpgYGAKCmBgYHtyLCBtZXNzYWdlPUZBTFNFfQpzZXQuc2VlZCgxMjMpCmxpYnJhcnkoUnRzbmUpCkRSIDwtIFJ0c25lKHQoY2VsbGFzc2lnbiksIHBjYT1GKQpEUmRpc3QgPC0gZGlzdChEUiRZKQpsaWJyYXJ5KGRlbnNpdHlDbHVzdCkKZGNsdXN0IDwtIGRlbnNpdHlDbHVzdChEUmRpc3QsZ2F1c3NpYW49VCkKZGNsdXN0IDwtIGZpbmRDbHVzdGVycyhkY2x1c3QsIHJobyA9IDUwLCBkZWx0YSA9IDIuNSkKYGBgCgpgYGB7ciwgZmlnLnNob3c9J2hvbGQnLCBmaWcuYWxpZ249J2NlbnRlcicsIG1lc3NhZ2U9RkFMU0V9CiMgQ2hlY2sgdGhyZXNob2xkcwpvcHRpb25zKHJlcHIucGxvdC53aWR0aD02LCByZXByLnBsb3QuaGVpZ2h0PTYpCnBsb3QoZGNsdXN0JHJobyxkY2x1c3QkZGVsdGEscGNoPTIwLGNleD0wLjYseGxhYj0ncmhvJywgeWxhYj0nZGVsdGEnKQpwb2ludHMoZGNsdXN0JHJob1tkY2x1c3QkcGVha3NdLGRjbHVzdCRkZWx0YVtkY2x1c3QkcGVha3NdLGNvbD0icmVkIixwY2g9MjAsY2V4PTAuOCkKdGV4dChkY2x1c3QkcmhvW2RjbHVzdCRwZWFrc10tMixkY2x1c3QkZGVsdGFbZGNsdXN0JHBlYWtzXSsxLjUsbGFiZWxzPWRjbHVzdCRjbHVzdGVyc1tkY2x1c3QkcGVha3NdKQphYmxpbmUodj01MCkKYWJsaW5lKGg9Mi41KQpgYGAKCmBgYHtyLCBldmFsPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQojIEFkZCBjbHVzdGVyIGluZm9ybWF0aW9uCmRlbnNpdHlDbHVzdCA8LSBkY2x1c3QkY2x1c3RlcnMKZGVuc2l0eUNsdXN0IDwtIGFzLmRhdGEuZnJhbWUoZGVuc2l0eUNsdXN0KQpyb3duYW1lcyhkZW5zaXR5Q2x1c3QpIDwtIGNpc1RvcGljT2JqZWN0QGNlbGwubmFtZXMKY29sbmFtZXMoZGVuc2l0eUNsdXN0KSA8LSAnZGVuc2l0eUNsdXN0JwpkZW5zaXR5Q2x1c3RbLDFdIDwtIGFzLmZhY3RvcihkZW5zaXR5Q2x1c3RbLDFdKQpjaXNUb3BpY09iamVjdCA8LSBhZGRDZWxsTWV0YWRhdGEoY2lzVG9waWNPYmplY3QsIGRlbnNpdHlDbHVzdCkKYGBgCgpPbmNlIGNhbGN1bGF0aW9ucyBhcmUgZG9uZSwgY2lzVG9waWMgb2ZmZXJzIGEgdW5pZmllZCB2aXN1YWxpemF0aW9uIGZ1bmN0aW9uIChgcGxvdEZlYXR1cmVzYCksIHdoaWNoIGFsbG93cyB0byB2aXN1YWxpemUgdFNORSwgVW1hcCwgZGlmZnVzc2lvbiBtYXBzLCBwcmluY2lwYWwgY29tcG9uZW50cyBhbmQgYmlwbG90cyAoaW4gMi8zRCksIGNvbG9yZWQgYnkgbWV0YWRhdGEgYW5kL29yIHRvcGljIGVucmljaG1lbnQuIAoKYGBge3IsIGZpZy5zaG93PSdob2xkJywgZmlnLmFsaWduPSdjZW50ZXInLCBtZXNzYWdlPUZBTFNFfQpwYXIobWZyb3c9YygxLDIpKQpwbG90RmVhdHVyZXMoY2lzVG9waWNPYmplY3QsIG1ldGhvZD0nVW1hcCcsIHRhcmdldD0nY2VsbCcsIHRvcGljX2NvbnRyPU5VTEwsIGNvbG9yQnk9YygnbkNvdW50cycsICduQWNjJywnZGVuc2l0eUNsdXN0JywgJ2dyYXBoQmFzZWRDbHVzdGVyc19DUkEnKSwgY2V4LmxlZ2VuZCA9IDAuOCwgZmFjdG9yLm1heD0uNzUsIGRpbT0yLCBsZWdlbmQ9VFJVRSwgY29sLmxvdz0nZGFya2dyZWVuJywgY29sLm1pZD0neWVsbG93JywgY29sLmhpZ2g9J2Jyb3duMScsIGludGVydmFscz0xMCkKYGBgCgpXZSBjYW4gYWxzbyBnZW5lcmF0ZSBhIGhlYXRtYXAgYmFzZWQgb24gdGhlIGNlbGwtY2lzVG9waWMgZGlzdHJpYnV0aW9ucy4KCmBgYHtyLCBmaWcuc2hvdz0naG9sZCcsIGZpZy5hbGlnbj0nY2VudGVyJywgbWVzc2FnZT1GQUxTRX0KY2VsbFRvcGljSGVhdG1hcChjaXNUb3BpY09iamVjdCwgbWV0aG9kPSdaLXNjb3JlJywgY29sb3JCeT1jKCdkZW5zaXR5Q2x1c3QnKSwgY29sLmxvdyA9ICJkb2RnZXJibHVlIiwgY29sLm1pZCA9ICJmbG9yYWx3aGl0ZSIsIGNvbC5oaWdoID0gImJyb3duMSIpCmBgYAoKVG8gY29sb3IgdGhlIFVtYXAgYnkgdG9waWMgc2NvcmU6CgpgYGB7ciwgbWVzc2FnZT1GQUxTRX0KcGFyKG1mcm93PWMoMiw1KSkKcGxvdEZlYXR1cmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J1VtYXAnLCB0YXJnZXQ9J2NlbGwnLCB0b3BpY19jb250cj0nUHJvYmFiaWxpdHknLCBjb2xvckJ5PU5VTEwsIGNleC5sZWdlbmQgPSAwLjgsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUpCmBgYAoKIyMjIyBFbnJpY2htZW50IG9mIGVwaWdlbm9taWMgc2lnbmF0dXJlcyBpbiB0aGUgY2VsbHMKCkJ5IG11bHRpcGx5aW5nIHRoZSBjZWxsIGFuZCB0b3BpYyBhc3NpZ25tZW50cywgdGhlIGxpa2VsaWhvb2Qgb2YgZWFjaCByZWdpb24gaW4gZWFjaCBjZWxsIChpLmUuIHByZWRpY3RpdmUgZGlzdHJpYnV0aW9uKS4gVGhpcyBtYXRyaXggaXMgc3RvcmVkIGluIGBvYmplY3RAcHJlZGljdGl2ZS5kaXN0cmlidXRpb25gLiBUaGVzZSBkaXN0cmlidXRpb25zIGNhbiBiZSB1c2VkIHRvIGVzdGltYXRlIGRyb3Atb3V0cyBhbmQgYnVpbGQgY2VsbC1zcGVjaWZpYyByZWdpb24gcmFua2luZ3MgdGhhdCBjYW4gYmUgdXNlZCB3aXRoIGBBVUNlbGxgIGZvciBlc3RpbWF0aW5nIHRoZSBlbnJpY2htZW50IG9mIGVwaWdlbm9taWMgc2lnbmF0dXJlcyB3aXRoaW4gdGhlIGNlbGxzLgoKYGBge3IsIGV2YWw9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CnByZWQubWF0cml4IDwtIHByZWRpY3RpdmVEaXN0cmlidXRpb24oY2lzVG9waWNPYmplY3QpCmBgYAoKRm9yIGV4YW1wbGUsIHdlIGNhbiBldmFsdWF0ZSB3aGljaCBjZWxscyBhcmUgbW9yZSBlbnJpY2hlZCBmb3IgY2VydGFpbiBDaElQLXNlcSBzaWduYXR1cmVzLiBGaXJzdCwgZXBpZ2Vub21pYyByZWdpb25zIGFyZSBpbnRlcnNlY3RlZCBhbmQgbWFwcGVkIHRvIHJlZ2lvbnMgaW4gdGhlIGRhdGFzZXQgKGJ5IGRlZmF1bHQsIHdpdGggYXQgbGVhc3QgNDAlIG92ZXJsYXApLiBUbyB0ZXN0IHRoZSBlbnJpY2htZW50IG9mIHRoZXNlIHNpZ25hdHVyZXMgaW4gZWFjaCBjZWxsLCB3ZSB1c2UgYSBHU0VBLWxpa2UgcmVjb3ZlcnkgY3VydmUgcmFua2luZy1iYXNlZCBhcHByb2FjaC4gIEluIGVhY2ggY2VsbCwgcmVnaW9ucyBhcmUgcmFua2VkIGJhc2VkIG9uIHRoZWlyIHByb2JhYmlsaXR5ICh4LWF4aXMpLCBhbmQgd2hlbiBhIHJlZ2lvbiBpcyBwcmVzZW50IGluIHRoZSBzaWduYXR1cmUgd2UgaW5jcmVhc2Ugb25lIHN0ZXAgaW4gdGhlIHktYXhpcy4gVGhlIEFyZWEgVW5kZXIgdGhlIEN1cnZlIChBVUMpIGlzIHVzZWQgdG8gZXZhbHVhdGUgdGhlIGltcG9ydGFuY2Ugb2YgdGhhdCBzaWduYXR1cmUgd2l0aGluIHRoYXQgY2VsbC4gVGhlIGNvcnJlc3BvbmRpbmcgb3ZlcmxhcHBpbmcgc2V0cyAod2hpY2ggYXJlIHN0b3JlZCBpbiBgb2JqZWN0QHNpZ25hdHVyZXNgKSBhcmUgdXNlZCBhcyBpbnB1dCwgdG9nZXRoZXIgd2l0aCB0aGUgY2VsbC1zcGVjaWZpYyByZWdpb24gcmFua2luZ3MsIGZvciB0aGUgZnVuY3Rpb24gYHNpZ25hdHVyZUNlbGxFbnJpY2htZW50YC4gQVVDIHZhbHVlcyBmb3IgZWFjaCBzcGVjaWZpYyBzaWduYXR1cmUgYXJlIHN0b3JlZCBpbiBgb2JqZWN0QGNlbGwuZGF0YWAuIEluIHRoaXMgY2FzZSwgd2UgY2FuIHVzZSBidWxrIHNpZ25hdHVyZXMgZnJvbSB0aGUgaGVtYXRvcG9pZXRpYyBzeXN0ZW0gZnJvbSBDb3JjZXMgZXQgYWwuICgyMDE2KS4KCmBgYHtyLCBldmFsPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQojIE9idGFpbiBzaWduYXR1cmVzCnBhdGhfdG9fc2lnbmF0dXJlcyA8LSBwYXN0ZTAocGF0aFRvMTBYLCAnQnVsa19wZWFrcy8nKQpCdWxrX0FUQUNfc2lnbmF0dXJlcyA8LSBwYXN0ZShwYXRoX3RvX3NpZ25hdHVyZXMsIGxpc3QuZmlsZXMocGF0aF90b19zaWduYXR1cmVzKSwgc2VwPScnKQpsYWJlbHMgIDwtIGdzdWIoJy5fcGVha3MubmFycm93UGVhaycsICcnLCBsaXN0LmZpbGVzKHBhdGhfdG9fc2lnbmF0dXJlcykpCmNpc1RvcGljT2JqZWN0IDwtIGdldFNpZ25hdHVyZXNSZWdpb25zKGNpc1RvcGljT2JqZWN0LCBCdWxrX0FUQUNfc2lnbmF0dXJlcywgbGFiZWxzPWxhYmVscywgbWluT3ZlcmxhcCA9IDAuNCkKCiMgVG8gb25seSBrZWVwIHVuaXF1ZSBwZWFrcyBwZXIgc2lnbmF0dXJlCmNpc1RvcGljT2JqZWN0QHNpZ25hdHVyZXMgPC0gbGxwbHkoMTpsZW5ndGgoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlcyksIGZ1bmN0aW9uIChpKSBjaXNUb3BpY09iamVjdEBzaWduYXR1cmVzW1tpXV1bLXdoaWNoKGNpc1RvcGljT2JqZWN0QHNpZ25hdHVyZXNbW2ldXSAlaW4lIHVubGlzdChhcy52ZWN0b3IoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlc1staV0pKSldKSAKbmFtZXMoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlcykgPC0gbGFiZWxzCmBgYAoKYGBge3IsIGV2YWw9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CiMgQ29tcHV0ZSBjZWxsIHJhbmtpbmdzCmxpYnJhcnkoQVVDZWxsKQphdWNlbGxSYW5raW5ncyA8LSBBVUNlbGxfYnVpbGRSYW5raW5ncyhwcmVkLm1hdHJpeCwgcGxvdD1GQUxTRSwgdmVyYm9zZT1GQUxTRSkKYGBgCgpgYGB7ciwgZXZhbD1GQUxTRSwgbWVzc2FnZT1GQUxTRX0KIyBDaGVjayBzaWduYXR1cmUgZW5yaWNobWVudCBpbiBjZWxscyAoUmVmZXJlbmNlIHRpbWU6IDEgbWluKQpjaXNUb3BpY09iamVjdCA8LSBzaWduYXR1cmVDZWxsRW5yaWNobWVudChjaXNUb3BpY09iamVjdCwgYXVjZWxsUmFua2luZ3MsIHNlbGVjdGVkLnNpZ25hdHVyZXM9J2FsbCcsIGF1Y01heFJhbmsgPSAwLjMqbnJvdyhhdWNlbGxSYW5raW5ncyksIHBsb3Q9RkFMU0UpCmBgYAoKYGBge3IsIGZpZy5zaG93PSdob2xkJywgZmlnLmFsaWduPSdjZW50ZXInLCBtZXNzYWdlPUZBTFNFfQojIFBsb3QKcGFyKG1mcm93PWMoMiwyKSkKcGxvdEZlYXR1cmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J1VtYXAnLCB0YXJnZXQ9J2NlbGwnLCB0b3BpY19jb250cj1OVUxMLCBjb2xvckJ5PWMoJ0NENFRjZWxsJywgJ01vbm8nLCAnQmNlbGwnLCAnTktjZWxsJyksIGNleC5sZWdlbmQgPSAwLjQsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGludGVydmFscz0xMCkKYGBgCgoqKk5PVEUqKjogVGhlIHByZWRpY3RpdmUgZGlzdHJpYnV0aW9ucyBhbmQgdGhlIEFVQ2VsbCByYW5raW5ncyBhcmUgbm90IHN0b3JlZCBpbiB0aGUgY2lzVG9waWMgb2JqZWN0IGFzIHRoZXkgaGF2ZSBhIGJpZyBzaXplLgoKIyMjIEIuIEFuYWx5c2lzIG9mIHRoZSByZWd1bGF0b3J5IHRvcGljcwoKIyMjIyBEZWZpbmluZyB0b3BpY3MKClRvIGFuYWx5emUgdGhlIHJlZ2lvbnMgaW5jbHVkZWQgaW4gdGhlIGNpc1RvcGljcywgdGhlIGZpcnN0IHN0ZXAgaXMgYWx3YXlzIHRvIGRlcml2ZSBhIHNjb3JlIHRoYXQgZXZhbHVhdGVzIGhvdyBsaWtlbHkgaXMgZm9yIGEgcmVnaW9uIHRvIGJlbG9uZyB0byBhIHRvcGljLiBgZ2V0UmVnaW9uc1Njb3JlcygpYCBjYWxjdWxhdGVzIHRoZXNlIHNjb3JlcyBiYXNlZCBvbiB0aGUgcHJvcG9ydGlvbiBvZiByZWdpb24gc3BlY2lmaWMgYXNzaWdubWVudHMgdG8gYSB0b3BpYy4gVGhlc2Ugc2NvcmVzIGNhbiBiZSByZXNjYWxlZCBpbnRvIHRoZSByYW5nZSBbMCwxXSwgd2hpY2ggd2lsbCBiZSB1c2VmdWwgZm9yIHRoZSBiaW5hcml6YXRpb24gc3RlcCAoYXMgaXQgd2lsbCBmb3JjZSBkYXRhIHRvIGZvbGxvdyBhIGdhbW1hIGRpc3RyaWJ1dGlvbiBzaGFwZSkuIFRoaXMgaW5mb3JtYXRpb24gaXMgc3RvcmVkIGluIHRoZSBgcmVnaW9uLmRhdGFgIHNsb3QuCgpgYGB7ciwgZXZhbCA9IEZBTFNFLCBtZXNzYWdlPUZBTFNFfQpjaXNUb3BpY09iamVjdCA8LSBnZXRSZWdpb25zU2NvcmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J05vcm1Ub3AnLCBzY2FsZT1UUlVFKQpgYGAKCkJpZ1dpZyBmaWxlcyBmb3Igb2JzZXJ2aW5nIHRoZSBzY29yZWQgcmVnaW9ucyBpbiB0aGUgZ2Vub21lIGNhbiBiZSBnZW5lcmF0ZWQuIE5vdGUgdGhhdCBpbmZvcm1hdGlvbiBvbiB0aGUgbGVuZ3RoIG9mIHRoZSBjaHJvbW9zb21lcyBoYXMgdG8gYmUgcHJvdmlkZWQuIFRoZXNlIGZpbGVzIGNhbiBiZSB1cGxvYWRlZCBpbiBJR1Ygb3IgVUNTQyBmb3IgdmlzdWFsaXNhdGlvbi4gVGhpcyBpbmZvcm1hdGlvbiBjYW4gYmUgZWFzaWx5IGZvdW5kIGluIHRoZSBUeERiIG9iamVjdHMgb2YgdGhlIGNvcnJlc3BvbmRpbmcgZ2Vub21lcywgZm9yIGV4YW1wbGUuCgpgYGB7ciwgZXZhbCA9IEZBTFNFLCBtZXNzYWdlPUZBTFNFfQpsaWJyYXJ5KFR4RGIuSHNhcGllbnMuVUNTQy5oZzE5Lmtub3duR2VuZSkKdHhkYiA8LSBUeERiLkhzYXBpZW5zLlVDU0MuaGcxOS5rbm93bkdlbmUKCmdldEJpZ3dpZ0ZpbGVzKGNpc1RvcGljT2JqZWN0LCBwYXRoPSdvdXRwdXQvY2lzVG9waWNzX2FzQlcnLCBzZXFsZW5ndGhzPXNlcWxlbmd0aHModHhkYikpCmBgYAoKSG93ZXZlciwgbWFueSB0b29scyBhcmUgbGltaXRlZCB0byB3b3JrIHdpdGggc2V0cyBvZiByZWdpb25zIHJhdGhlciB0aGFuIHJhbmtpbmdzIG9mIHJlZ2lvbnMuIEtleXdvcmRzLCBvciB0aGUgbW9zdCBjb250cmlidXRpbmcgcmVnaW9ucyBpbiBhIHRvcGljLCBjYW4gYmUgdXNlZCBhcyBhIHJlcHJlc2VudGF0aXZlIHNldCBvZiByZWdpb25zIG9mIHRoZSB0b3BpYy4gYGJpbmFyaXplY2lzVG9waWNzKClgIGFsbG93cyB0byBzZWxlY3QgdGhlIHRvcCByZWdpb25zIGJhc2VkIG9uIHR3byBtZXRob2RzOgoKYSkgYG1ldGhvZCA9ICJQcmVkZWZpbmVkImA6IHRvIHNlbGVjdCBhIHByZWRlZmluZWQgbnVtYmVyIG9mIHJlZ2lvbnMgKGRldGVybWluZWQgYnkgdGhlIGBjdXRvZmZzYCBhcmd1bWVudCkKCmIpIGBtZXRob2QgPSAiR2FtbWFGaXQiYCAoZGVmYXVsdCk6IHRvIGF1dG9tYXRpY2FsbHkgc2VsZWN0IGEgdGhyZXNob2xkIGJhc2VkIG9uIGEgZml0IG9mIHRoZSBzY29yZXMgdG8gYSBnYW1tYSBkaXN0cmlidXRpb24uIFRoaXMgaXMgcmVjb21tZW5kZWQgd2hlbiB1c2luZyBgbWV0aG9kPSJOb3JtVG9wImAgYW5kIGBzY2FsZT1UUlVFYCBpbiBnZXRSZWdpb25TY29yZXMoKS4gTm90ZSB0aGF0IHRoZSBwcm9iYWJpbGl0eSB0aHJlc2hvbGQgbXVzdCBiZSBwcm92aWRlZCBieSB0aGUgdXNlciBhbmQgaXQgbXVzdCBiZSB0YWtlbiBhZnRlciB0aGUgZGVuc2l0eSAoYmFzZWQgb24gdGhlIGZpdHRlZCBnYW1tYSBkaXN0cmlidXRpb24pIGlzIHN0YWJpbGlzZWQgKGkuZS4gaW4gdGhlIHRhaWwgb2YgdGhlIGRpc3RyaWJ1dGlvbikuCgpgYGB7ciwgZmlnLnNob3c9J2hvbGQnLCBmaWcuYWxpZ249J2NlbnRlcicsIG1lc3NhZ2U9RkFMU0V9CnBhcihtZnJvdz1jKDIsNSkpCmNpc1RvcGljT2JqZWN0IDwtIGJpbmFyaXplY2lzVG9waWNzKGNpc1RvcGljT2JqZWN0LCB0aHJQPTAuOTc1LCBwbG90PVRSVUUpCmBgYAoKVGhlIHJlZ2lvbnMgc2V0cyBzZWxlY3RlZCBhbmQgZGlzdHJpYnV0aW9ucyBmb3IgZWFjaCBjaXNUb3BpYyBjYW4gdGhlbiBiZSBhbmFsaXplZCBpbiBkaWZmZXJlbnQgd2F5cyAoZXhhbXBsZXMgaW4gbmV4dCBzZWN0aW9ucykuIFRoZXkgY2FuIGFsc28gYmUgZXhwb3J0ZWQgdG8gYmVkIGZpbGVzIHRvIGFuYWx5emUgd2l0aCBleHRlcm5hbCB0b29sczoKCmBgYHtyLCBldmFsPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQpnZXRCZWRGaWxlcyhjaXNUb3BpY09iamVjdCwgcGF0aD0nb3V0cHV0L2Npc1RvcGljc19hc0JlZCcpCmBgYAoKIyMjIyBUb3BpYyB2aXN1YWxpemF0aW9uCgpCYXNlZCBvbiB0aGUgdG9waWMgc2NvcmVzIGZvciBlYWNoIHJlZ2lvbiwgZGlmZmVyZW50IG1ldGhvZHMgY2FuIGJlIHVzZWQgZm9yIGNsdXN0ZXJpbmcgYW5kL29yIHZpc3VhbGl6YXRpb24gKGFzIHNob3duIGZvciBjZWxscykuIGNpc1RvcGljIGluY2x1ZGVzIHdyYXBwZXIgZnVuY3Rpb25zIHRvIGVhc2lseSBydW4gVW1hcCwgdFNORSwgZGlmZnVzc2lvbiBtYXBzIGFuZCBQQ0EgKHRoZSByZXN1bHRzIGFyZSBzYXZlZCBpbiB0aGUgc2xvdCBgQGRyJHJlZ2lvbmApLiBJbiB0aGUgY2FzZSBvZiByZWdpb25zLCBvbmx5IGhpZ2ggY29uZmlkZW5jZSByZWdpb25zIChpLmUuIHRoYXQgcGFzcyB0aGUgYmluYXJpemF0aW9uIHRocmVzaG9sZCBhdCBsZWFzdCBpbiAxIHRvcGljKSBhcmUgdXNlZDoKCmBgYHtyLCBldmFsPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQpjaXNUb3BpY09iamVjdCA8LSBydW50U05FKGNpc1RvcGljT2JqZWN0LCB0YXJnZXQ9J3JlZ2lvbicsIHBlcnBsZXhpdHk9MjAwLCBjaGVja19kdXBsaWNhdGVzPUZBTFNFKQpgYGAKClRoZSBmdW5jdGlvbiBgcGxvdEZlYXR1cmVzYCBjYW4gYWxzbyBiZSB1c2VkIHRvIHZpc3VhbGl6ZSByZWdpb24tYmFzZWQgdFNORXMsIGRpZmZ1c3Npb24gbWFwcywgcHJpbmNpcGFsIGNvbXBvbmVudHMgYW5kIGJpcGxvdHMgKGluIDIvM0QpLCBjb2xvcmVkIGJ5IG1ldGFkYXRhIGFuZC9vciB0b3BpYyBlbnJpY2htZW50LiAKCmBgYHtyLCBmaWcuc2hvdz0naG9sZCcsIGZpZy5hbGlnbj0nY2VudGVyJywgbWVzc2FnZT1GQUxTRX0KcGxvdEZlYXR1cmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J3RTTkUnLCB0YXJnZXQ9J3JlZ2lvbicsIHRvcGljX2NvbnRyPU5VTEwsIGNvbG9yQnk9YygnbkNlbGxzJyksIGNleC5sZWdlbmQgPSAwLjgsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGNvbC5sb3c9J2RhcmtncmVlbicsIGNvbC5taWQ9J3llbGxvdycsIGNvbC5oaWdoPSdicm93bjEnLCBpbnRlcnZhbHM9MTApCgpwYXIobWZyb3c9YygyLDUpKQpwbG90RmVhdHVyZXMoY2lzVG9waWNPYmplY3QsIG1ldGhvZD0ndFNORScsIHRhcmdldD0ncmVnaW9uJywgdG9waWNfY29udHI9J1otc2NvcmUnLCBjb2xvckJ5PU5VTEwsIGNleC5sZWdlbmQgPSAwLjgsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGNvbC5sb3c9J2RhcmtncmVlbicsIGNvbC5taWQ9J3llbGxvdycsIGNvbC5oaWdoPSdicm93bjEnKQpgYGAKCgojIyMjIEVucmljaG1lbnQgb2YgZXBpZ2Vub21pYyBzaWduYXR1cmVzCgpBbm90aGVyIHdheSBvZiBleHBsb3JpbmcgdGhlIHRvcGljcyBpcyB0byBjaGVjayB0aGVpciBvdmVybGFwIChpLmUuIHRoZSByZWdpb25zIGluY2x1ZGVkIGluIHRoZSB0b3BpY3MpIHdpdGggcHJlZGVmaW5lZCBlcGlnZW5vbWljIHNpZ25hdHVyZXMvZGF0YXNldHMuIEZvciBleGFtcGxlLCByZWdpb25zIGZyb20gQ2hJUC1zZXEgY2FuIHBvaW50IHRvd2FyZHMgZW5yaWNobWVudCBvZiBiaW5kaW5nIHNpdGVzIG9mIGEgZ2l2ZW4gVEYsIHJlZ2lvbnMgZnJvbSBGQUlSRS0gb3IgQVRBQy1zZXEgdG8gcmVnaW9ucyBnZW5lcmFsbHkgb3BlbiBpbiBhIGdpdmVuIGNlbGwgdHlwZSBvciB0aXNzdWUsIGV0Yy4KCkZpcnN0LCBlcGlnZW5vbWljIHJlZ2lvbnMgYXJlIGludGVyc2VjdGVkIGFuZCBtYXBwZWQgdG8gcmVnaW9ucyBpbiB0aGUgZGF0YXNldCAoYnkgZGVmYXVsdCwgd2l0aCBhdCBsZWFzdCA0MCUgb3ZlcmxhcCkuIFRvIHRlc3QgdGhlIGVucmljaG1lbnQgb2YgdGhlc2Ugc2lnbmF0dXJlcyBpbiBlYWNoIGNlbGwsIHdlIHVzZSBhIEdTRUEtbGlrZSByZWNvdmVyeSBjdXJ2ZSByYW5raW5nLWJhc2VkIGFwcHJvYWNoLiAgSW4gZWFjaCB0b3BpYywgcmVnaW9ucyBhcmUgcmFua2VkIGJhc2VkIG9uIHRoZWlyIHRvcGljIHByb2JhYmlsaXR5ICh4LWF4aXMpLCBhbmQgd2hlbiBhIHJlZ2lvbiBpcyBwcmVzZW50IGluIHRoZSBzaWduYXR1cmUgd2UgaW5jcmVhc2Ugb25lIHN0ZXAgaW4gdGhlIHktYXhpcy4gVGhlIEFyZWEgVW5kZXIgdGhlIEN1cnZlIChBVUMpIGlzIHVzZWQgdG8gZXZhbHVhdGUgdGhlIGltcG9ydGFuY2Ugb2YgdGhhdCBzaWduYXR1cmUgd2l0aGluIHRoYXQgdG9waWMuIFNpZ25hdHVyZXMgYXJlIGFsc28gc2F2ZWQgaW4gYG9iamVjdEByZWdpb24uZGF0YWAgYXMgbG9naWNhbCBjb2x1bW5zIChgVFJVRWAgaWYgdGhlIHJlZ2lvbiBpcyBpbiB0aGUgc2lnbmF0dXJlLCBvdGhlcndpc2UgYEZBTFNFYCkuIEEgaGVhdG1hcCBzaG93aW5nIHRoZSBlbnJpY2htZW50IHNjb3JlcyBmb3IgZWFjaCB0b3BpYyBhbmQgc2lnbmF0dXJlIGNhbiBiZSBvYnRhaW5lZCB3aXRoIGBzaWduYXR1cmVzSGVhdG1hcGAuCgpgYGB7ciwgZXZhbD1GQUxTRSwgbWVzc2FnZT1GQUxTRX0KIyBPYnRhaW4gc2lnbmF0dXJlcyAoaWYgaXQgaGFzIG5vdCBiZWVuIHJ1biBiZWZvcmUpCnBhdGhfdG9fc2lnbmF0dXJlcyA8LSBwYXN0ZTAocGF0aFRvMTBYLCAnQnVsa19wZWFrcy8nKQpCdWxrX0FUQUNfc2lnbmF0dXJlcyA8LSBwYXN0ZShwYXRoX3RvX3NpZ25hdHVyZXMsIGxpc3QuZmlsZXMocGF0aF90b19zaWduYXR1cmVzKSwgc2VwPScnKQpsYWJlbHMgIDwtIGdzdWIoJy5fcGVha3MubmFycm93UGVhaycsICcnLCBsaXN0LmZpbGVzKHBhdGhfdG9fc2lnbmF0dXJlcykpCmNpc1RvcGljT2JqZWN0IDwtIGdldFNpZ25hdHVyZXNSZWdpb25zKGNpc1RvcGljT2JqZWN0LCBCdWxrX0FUQUNfc2lnbmF0dXJlcywgbGFiZWxzPWxhYmVscywgbWluT3ZlcmxhcCA9IDAuNCkKCiMgVG8gb25seSBrZWVwIHVuaXF1ZSBwZWFrcyBwZXIgc2lnbmF0dXJlCmNpc1RvcGljT2JqZWN0QHNpZ25hdHVyZXMgPC0gbGxwbHkoMTpsZW5ndGgoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlcyksIGZ1bmN0aW9uIChpKSBjaXNUb3BpY09iamVjdEBzaWduYXR1cmVzW1tpXV1bLXdoaWNoKGNpc1RvcGljT2JqZWN0QHNpZ25hdHVyZXNbW2ldXSAlaW4lIHVubGlzdChhcy52ZWN0b3IoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlc1staV0pKSldKSAKbmFtZXMoY2lzVG9waWNPYmplY3RAc2lnbmF0dXJlcykgPC0gbGFiZWxzCmBgYAoKV2UgY2FuIHZpc3VhbGl6ZSBob3cgdGhlc2UgcmVnaW9ucyBhcmUgZW5yaWNoZWQgd2l0aGluIGVhY2ggdG9waWMgd2l0aCBgc2lnbmF0dXJlc0hlYXRtYXBgLiBXaXRoIHRoaXMgZnVuY3Rpb24sIHdlIG9idGFpbiBhIGhlYXRtYXAgc2hvd2luZyB0aGUgcm93IG5vcm1hbGlzZWQgQVVDIHNjb3Jlcy4KCmBgYHtyLCBmaWcuc2hvdz0naG9sZCcsIGZpZy5hbGlnbj0nY2VudGVyJywgbWVzc2FnZT1GQUxTRX0Kc2lnbmF0dXJlc0hlYXRtYXAoY2lzVG9waWNPYmplY3QpCmBgYAoKIyMjIyBBbm5vdGF0aW9uIHRvIGdlbmVzIGFuZCBHTyB0ZXJtcwoKQW5vdGhlciB3YXkgb2YgZ2FpbmluZyBpbnNpZ2h0IG9uIHRoZSB0b3BpY3MgaXMgdG8gbGluayB0aGUgcmVnaW9ucyB0byBnZW5lcywgYW5kIHRvIGRldGVybWluZSBHTyB0ZXJtcyAob3IgcGF0aHdheXMgb3IgYW55IG90aGVyIHR5cGUgb2YgZ2VuZS1zZXQpIHRoYXQgYXJlIGVucmljaGVkIHdpdGhpbiB0aGVtLiBjaXNUb3BpYyBwcm92aWRlcyB0aGUgZnVuY3Rpb24gYGFubm90YXRlUmVnaW9ucygpYCB0byBhbm5vdGF0ZSByZWdpb25zIHRvIEdPIHRlcm1zIHVzaW5nIHRoZSAiVHhEYiIgQmlvY29uZHVjdG9yIHBhY2thZ2VzIChyZXBsYWNlICdUeERiLkhzYXBpZW5zLlVDU0MuaGcxOS5rbm93bkdlbmUnIGJ5IHRoZSBhcHByb3BpYXRlIG9yZ2FuaXNtIHBhY2thZ2UpLCBhbmQgYW5ub3RhdGlvbiBkYXRhYmFzZXMgKCJPcmdEYiIgcGFja2FnZXMpLgoKYGBge3IsIGV2YWw9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CmxpYnJhcnkob3JnLkhzLmVnLmRiKQpjaXNUb3BpY09iamVjdCA8LSBhbm5vdGF0ZVJlZ2lvbnMoY2lzVG9waWNPYmplY3QsIHR4ZGI9VHhEYi5Ic2FwaWVucy5VQ1NDLmhnMTkua25vd25HZW5lLCBhbm5vRGI9J29yZy5Icy5lZy5kYicpCmBgYAoKQXMgd2Ugc2F3IGJlZm9yZSwgd2UgY2FuIHVzZSB0aGUgcmVnaW9uIHR5cGUgYW5ub3RhdGlvbnMgYXMgcmVnaW9uIHNldHMvc2lnbmF0dXJlcyB0byBjaGVjayB3aGV0aGVyIGEgdG9waWMgaXMgbW9yZSBlbnJpY2hlZCBpbiBhIGNlcnRhaW4gdHlwZSBvZiByZWdpb24uIFdlIHNlZSB0aGF0IHJlZ2lvbnMgdGhhdCBiZWxvbmcgdG8gdG9waWNzIHRoYXQgYXJlIG5vdCBlbnJpY2hlZCBmb3IgYW55IG9mIHRoZSBjZWxsIHR5cGUgc3BlY2lmaWMgc2lnbmF0dXJlcyBhcmUgcHJvbW90ZXIgdG9waWNzLiBBZGRpdGlvbmFsbHksIHRoZSBzZXQgb2YgcmVnaW9ucyB0aGF0IGFyZSBhY2Nlc3NpYmxlIGluIGEgaGlnaGVyIG51bWJlciBvZiBjZWxscyBhcmUgYWxzbyBwcm9tb3RlcnMuCgpgYGB7ciwgZmlnLnNob3c9J2hvbGQnLCBmaWcuYWxpZ249J2NlbnRlcicsIG1lc3NhZ2U9RkFMU0V9CnBhcihtZnJvdz1jKDEsMSkpCnNpZ25hdHVyZXNIZWF0bWFwKGNpc1RvcGljT2JqZWN0LCBzZWxlY3RlZC5zaWduYXR1cmVzID0gJ2Fubm90YXRpb24nKQpwbG90RmVhdHVyZXMoY2lzVG9waWNPYmplY3QsIG1ldGhvZD0ndFNORScsIHRhcmdldD0ncmVnaW9uJywgdG9waWNfY29udHI9TlVMTCwgY29sb3JCeT1jKCdhbm5vdGF0aW9uJyksIGNleC5sZWdlbmQgPSAwLjgsIGZhY3Rvci5tYXg9Ljc1LCBkaW09MiwgbGVnZW5kPVRSVUUsIGludGVydmFscz0yMCkKYGBgCgpGb3IgaWRlbnRpZnlpbmcgZW5yaWNoZWQgR08gdGVybXMgcGVyIHRvcGljLCBjaXNUb3BpYyBwcm92aWRlcyBhIHdyYXBwZXIgb3ZlciBgckdSRUFUYCAoR3UgWiwgMjAxNykgW1JlZmVyZW5jZSBydW5uaW5nIHRpbWU6IDIwIG1pbnV0ZXNdLiBUaGUgYmluYXJpc2VkIHRvcGljcyAoaS5lLiBzZXRzIG9mIHRvcCByZWdpb25zIHBlciB0b3BpYykgYXJlIHVzZWQgaW4gdGhpcyBzdGVwLiBSZXN1bHRzIGFyZSBzdG9yZWQgaW4gYG9iamVjdEBiaW5hcml6ZWQuckdSRUFUYC4KCmBgYHtyLCBldmFsPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQpkYXRlKCkKY2lzVG9waWNPYmplY3QgPC0gR1JFQVQoY2lzVG9waWNPYmplY3QsIGdlbm9tZT0naGcxOScsIGZvbGRfZW5yaWNobWVudD0yLCBnZW5lSGl0cz0xLCBzaWduPTAuMDUsIHJlcXVlc3RfaW50ZXJ2YWw9MTApCmRhdGUoKQpgYGAKCldlIGNhbiB2aXN1YWxpemUgdGhlIGVucmljaG1lbnQgcmVzdWx0czoKCmBgYHtyLCBmaWcuc2hvdz0naG9sZCcsIGZpZy5hbGlnbj0nY2VudGVyJywgbWVzc2FnZT1GQUxTRX0Kb250b2xvZ3lEb3RQbG90KGNpc1RvcGljT2JqZWN0LCB0b3A9NSwgdG9waWNzPWMoNiwxMCksIHZhci55PSduYW1lJywgb3JkZXIuYnk9J0Jpbm9tX0FkanBfQkgnKQpgYGAKCiMjIyMgKFRyYW5zY3JpcHRpb24gZmFjdG9yKSBtb3RpZiBlbnJpY2htZW50CgpJdCBpcyBhbHNvIHBvc3NpYmxlIHRvIGlkZW50aWZ5IGVucmljaGVkIG1vdGlmcyB3aXRoaW4gdGhlIHRvcGljcyBhbmQgZm9ybSAqY2lzdHJvbWVzKiAoaS5lLiBzZXRzIG9mIHNlcXVlbmNlcyBlbnJpY2hlZCBmb3IgYSBnaXZlbiBtb3RpZikuIFRvIGRvIHRoaXMsIHdlIHVzZSBgUmNpc1RhcmdldGAgKEFpYmFyIGV0IGFsLiwgMjAxNykuIFRoZSBjdXJyZW50IHZlcnNpb24gcHJvdmlkZXMgZGF0YWJhc2VzIGZvciBodW1hbiAoaGcxOSkuIFlvdSBjYW4gZmluZCB0aGUgcmVnaW9uLWJhc2VkIGRhdGFiYXNlIGF0OiBodHRwczovL3Jlc291cmNlcy5hZXJ0c2xhYi5vcmcvY2lzdGFyZ2V0LwoKRm9yIHRoaXMgYW5hbHlzaXMsIHdlIGZpcnN0IG5lZWQgdG8gY29udmVydCB0aGUgY2lzVG9waWMgcmVnaW9ucyB0byB0aGUgcmVnaW9ucyBpbiB0aGUgZGF0YWJhc2VzICgiY3R4IHJlZ2lvbnMiKS4gV2UgY2FuIGRvIHRoaXMgaW4gdHdvIHdheXM6CgphKSBCaW5hcmlzZWQsIGNvbnZlcnRpbmcgdGhlIGJpbmFyaXNlZCB0b3BpYyB0byBhIHNldCBvZiBlcXVpdmFsZW50IGN0eCByZWdpb25zIChhIHJlZ2lvbiBjYW4gbWFwIHRvIG1vcmUgdGhhbiBvbmUgY3R4IHJlZ2lvbiwgYW5kIGFsbCByZWdpb25zIHdoaWNoIG92ZXJsYXAgbW9yZSB0aGFuIHRoZSBnaXZlbiB0aHJlc2hvbGQgYXJlIHRha2VuKS4KCmBgYHtyLCBldmFsPUZBTFNFLCBtZXNzYWdlPUZBTFNFLCBtZXNzYWdlPUZBTFNFfQpjaXNUb3BpY09iamVjdCA8LSBiaW5hcml6ZWRjaXNUb3BpY3NUb0N0eChjaXNUb3BpY09iamVjdCwgZ2Vub21lPSdoZzE5JykKYGBgCgpiKSBCYXNlZCBvbiB0aGUgbWF4aW11bSBvdmVybGFwLiBUaGlzIGlzIHVzZWZ1bCBpZiB3ZSBuZWVkIHRvIHVzZSB0aGUgc2NvcmVzIChhIHJlZ2lvbiBpcyBtYXBwZWQgdG8gaXRzIG1vc3Qgb3ZlcmxhcHBpbmcgY3R4IHJlZ2lvbikuIFRoaXMgaW5mb3JtYXRpb24gaXMgc3RvcmVkIGluIGBvYmplY3RAcmVnaW9uLmRhdGFgLgoKYGBge3IsIGV2YWw9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CmNpc1RvcGljT2JqZWN0IDwtIHNjb3JlZFJlZ2lvbnNUb0N0eChjaXNUb3BpY09iamVjdCwgZ2Vub21lPSdoZzE5JykKYGBgCgpXZSBhcmUgbm93IHJlYWR5IHRvIHJ1biBSY2lzVGFyZ2V0IGluIGVhY2ggdG9waWMgdXNpbmcgdGhlIHdyYXBwZXIgZnVuY3Rpb24gYHRvcGljc1JjaXNUYXJnZXQoKWAuIFRoaXMgZnVuY3Rpb24gdXNlcyB0aGUgYmluYXJpc2VkIHRvcGljIHJlZ2lvbnMgY29udmVydGVkIHRvIGN0eCByZWdpb25zLgoKYGBge3IsIGV2YWwgPSBGQUxTRSwgbWVzc2FnZT1GQUxTRX0KcGF0aFRvRmVhdGhlciA8LSAiaGcxOS1yZWdpb25zLTlzcGVjaWVzLmFsbF9yZWdpb25zLm1jOG5yLmZlYXRoZXIiCmNpc1RvcGljT2JqZWN0IDwtIHRvcGljc1JjaXNUYXJnZXQoY2lzVG9waWNPYmplY3QsIGdlbm9tZT0naGcxOScsIHBhdGhUb0ZlYXRoZXIsIHJlZHVjZWRfZGF0YWJhc2U9RkFMU0UsIG5lc1RocmVzaG9sZD0zLCByb2N0aHI9MC4wMDUsIG1heFJhbms9MjAwMDAsIG5Db3Jlcz01KQpgYGAKCk9uY2UgUmNpc1RhcmdldCBpcyBydW4sIGludGVyYWN0aXZlIG1vdGlmIGVucmljaG1lbnQgdGFibGVzIGNhbiBiZSBleHBsb3JlZCAoZS5nLiBwZXIgdG9waWMpOgoKYGBge3IsIGZpZy5zaG93PSdob2xkJywgZmlnLmFsaWduPSdjZW50ZXInLCBtZXNzYWdlPUZBTFNFfQpUb3BpYzZfbW90aWZfZW5yIDwtIGNpc1RvcGljT2JqZWN0QGJpbmFyaXplZC5SY2lzVGFyZ2V0W1s2XV0KRFQ6OmRhdGF0YWJsZShUb3BpYzZfbW90aWZfZW5yWywtYygiZW5yaWNoZWRSZWdpb25zIiwgIlRGX2xvd0NvbmYiKSwgd2l0aD1GQUxTRV0sIGVzY2FwZSA9IEZBTFNFLCBmaWx0ZXI9InRvcCIsIG9wdGlvbnM9bGlzdChwYWdlTGVuZ3RoPTUpKQpgYGAKCmBgYHtyLCBmaWcuc2hvdz0naG9sZCcsIGZpZy5hbGlnbj0nY2VudGVyJywgbWVzc2FnZT1GQUxTRX0KVG9waWMxMF9tb3RpZl9lbnIgPC0gY2lzVG9waWNPYmplY3RAYmluYXJpemVkLlJjaXNUYXJnZXRbWzEwXV0KRFQ6OmRhdGF0YWJsZShUb3BpYzEwX21vdGlmX2VuclssLWMoImVucmljaGVkUmVnaW9ucyIsICJURl9sb3dDb25mIiksIHdpdGg9RkFMU0VdLCBlc2NhcGUgPSBGQUxTRSwgZmlsdGVyPSJ0b3AiLCBvcHRpb25zPWxpc3QocGFnZUxlbmd0aD01KSkKYGBgCgpXZSBmaW5kIFNQSTEgYW5kIENFQlBCIGFzIG1hc3RlciByZWd1bGF0b3JzLCBmb3IgZXhhbXBsZSwgb2YgdGhlIEIgY2VsbCBhbmQgdGhlIG1vbm9jeXRlIHRvcGljLCByZXNwZWN0aXZlbHkuCgojIyMjIyBGb3JtYXRpb24gb2YgY2lzdHJvbWVzClJjaXNUYXJnZXQgcmVzdWx0cyBjYW4gYmUgdXNlZCB0byBmb3JtICpjaXN0cm9tZXMqLiBXZSBkZWZpbmUgYSAqKmNpc3Ryb21lKiogYXMgYSBzZXQgb2Ygc2VxdWVuY2VzIGVucmljaGVkIGZvciBtb3RpZnMgbGlua2VkIHRvIGEgY2VydGFpbiB0cmFuc2NyaXB0aW9uIGZhY3Rvci4gSW4gdGhlIGNhc2Ugb2YgY2lzVG9waWMsIHdlIGJ1aWxkIHRvcGljLXNwZWNpZmljIGNpc3Ryb21lcy4gY2lzVG9waWMgcHJvZHVjZXMgMyBkaWZmZXJlbnQgdHlwZXMgb2YgY2lzdHJvbWVzOiBjdHgtcmVnaW9ucyBiYXNlZCwgb3JpZ2luYWwtcmVnaW9ucyBiYXNlZCBhbmQgZ2VuZSBiYXNlZCAoYmFzZWQgb24gcmVnaW9uIGFubm90YXRpb24pLiBUaGUgKiphbm5vdGF0aW9uKiogcGFyYW1ldGVyIGRlY2lkZXMgd2hldGhlciBvbmx5IG1vdGlmcyBsaW5rZWQgd2l0aCBoaWdoIGNvbmZpZGVuY2Ugc2hvdWxkIGJlIHVzZWQgb3IgYWxzbyBtb3RpZnMgaW5kaXJlY3RseSBhbm5vdGF0ZWQgc2hvdWxkIGJlIGNvbnNpZGVyZWQgKGkuZS4gaW4gdGhpcyBjYXNlLCB0aGUgKl9leHRlbmRlZCBjaXN0cm9tZXMgd2lsbCBjb250YWluIGJvdGggYW5ub3RhdGlvbnMpLgoKYGBge3IsIGV2YWwgPSBGQUxTRSwgbWVzc2FnZT1GQUxTRX0KY2lzVG9waWNPYmplY3QgPC0gZ2V0Q2lzdHJvbWVzKGNpc1RvcGljT2JqZWN0LCBhbm5vdGF0aW9uID0gJ0JvdGgnLCBuQ29yZXM9NSkKYGBgCgpDaXN0cm9tZXMgYXJlIHVzZWZ1bCB0byBjb21wYXJlIHJlZ2lvbnMgbGlua2VkIHRvIGEgVEYgd2hpY2ggaGF2ZSBkaWZmZXJlbnQgc3BhdGlvLXRlbXBvcmFsIHBhdHRlcm5zLCB3aGljaCBtYXkgYmUgY2F1c2VkIGkuZS4gYnkgdGhlIHByZXNlbmNlIG9mIGNvLWZhY3RvcnMgb3IgZGlmZmVyZW50IGNvbmNlbnRyYXRpb25zIG9mIHRoZSBURi4gSW1wb3J0YW50bHksIHdlIGNhbiBhbHNvIGVzdGltYXRlIGFuZCB2aXN1YWxpemUgdGhlIGVucmljaG1lbnQgb2YgdGhlc2UgdG9waWMgc3BlY2lmaWMgY2lzdHJvbWVzIGluIHRoZSBjZWxscyAoYXMgc2hvd24gYWJvdmUpLiBGb3IgZXhhbXBsZSwgYmVsb3cgd2Ugc2hvdyB0aGUgZGlmZmVyZW50IGVucmljaG1lbnQgcGF0dGVybiBvZiBjZWxsIHR5cGUtc3BlY2lmaWMgU1BJMSByZWdpb25zLgoKYGBge3IsIGV2YWw9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CiMgQ29tcHV0ZSBBVUMgcmFua2luZ3MgYmFzZWQgb24gdGhlIHByZWRpY3RpdmUgZGlzdHJpYnV0aW9uCnByZWQubWF0cml4IDwtIHByZWRpY3RpdmVEaXN0cmlidXRpb24oY2lzVG9waWNPYmplY3QpCgpsaWJyYXJ5KEFVQ2VsbCkKYXVjZWxsUmFua2luZ3MgPC0gQVVDZWxsX2J1aWxkUmFua2luZ3MocHJlZC5tYXRyaXgsIHBsb3Q9RkFMU0UsIHZlcmJvc2U9RkFMU0UpCmBgYAoKYGBge3IsIGV2YWw9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CmNpc1RvcGljT2JqZWN0IDwtIGdldENpc3Ryb21lRW5yaWNobWVudChjaXNUb3BpY09iamVjdCwgdG9waWM9NiwgVEZuYW1lPSdTUEkxJywgYXVjZWxsUmFua2luZ3MgPSBhdWNlbGxSYW5raW5ncywgYXVjTWF4UmFuayA9IDAuMDUqbnJvdyhhdWNlbGxSYW5raW5ncyksIHBsb3Q9RkFMU0UpCmNpc1RvcGljT2JqZWN0IDwtIGdldENpc3Ryb21lRW5yaWNobWVudChjaXNUb3BpY09iamVjdCwgdG9waWM9MTAsIFRGbmFtZT0nU1BJMScsIGF1Y2VsbFJhbmtpbmdzID0gYXVjZWxsUmFua2luZ3MsIGF1Y01heFJhbmsgPSAwLjA1Km5yb3coYXVjZWxsUmFua2luZ3MpLCBwbG90PUZBTFNFKQpgYGAKCmBgYHtyLCBmaWcuc2hvdz0naG9sZCcsIGZpZy5hbGlnbj0nY2VudGVyJywgbWVzc2FnZT1GQUxTRX0KcGFyKG1mcm93PWMoMSwyKSkKcGxvdEZlYXR1cmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J1VtYXAnLCB0YXJnZXQ9J2NlbGwnLCB0b3BpY19jb250cj1OVUxMLCBjb2xvckJ5PWMoJ1RvcGljNl9TUEkxICg3NTFwKScsJ1RvcGljMTBfU1BJMSAoNTg3cCknKSwgY2V4LmxlZ2VuZCA9IDAuOCwgZmFjdG9yLm1heD0uNzUsIGRpbT0yLCBsZWdlbmQ9VFJVRSwgaW50ZXJ2YWxzPTEwKQpgYGAKCkRpZmZlcmVudGlhbCBtb3RpZiBlbnJpY2htZW50IGNhbiBiZSBwZXJmb3JtZWQgdXNpbmcgUlNBVCBvciBIb21lciAoTWVkaW5hLVJpdmVyYSAqZXQgYWwqLCAyMDE1OyBIZWlueiAqZXQgYWwqLCAyMDE3KTsgYW5kIHNoYXBlIGZlYXR1cmVzIGNhbiBiZSBtb2RlbGxlZCBwZXIgc2VxdWVuY2UgdXNpbmcgR0JzaGFwZSBiaWd3aWcgZmlsZXMgKENoaXUgKmV0IGFsLiosIDIwMTUpLiBUaGVzZSBmZWF0dXJlcyBjYW4gYmUgdXNlZCBhcyBpbnB1dCB0byBNYWNoaW5lIExlYXJuaW5nIG1ldGhvZHMgKGkuZS4gUmFuZG9tIEZvcmVzdCkgdG8gZGV0ZXJtaW5lIHRoZWlyIHJlbGV2YW5jZSBpbiBnZW5lcmF0aW5nIHRoZSBkaWZmZXJlbnQgcGF0dGVybnMuIAoKIyMjIyMgIEdlbmUgYWNjZXNzaWJpbGl0eSBzY29yZXMKCldlIGNhbiBhbHNvIGV2YWx1YXRlIHRoZSBvdmVyYWxsIGFjY2Vzc2liaWxpdHkgYXJvdW5kIGNlcnRhaW4gbWFya2VycyB1c2luZyB0aGUgcHJlZGljdGl2ZSBkaXN0cmlidXRpb24uIEluIHRoaXMgY2FzZSwgd2Ugd2lsbCBzdW0gdGhlIHByb2JhYmlsaXR5IG9mIGVhY2ggcmVnaW9uIGxpbmtlZCB0byBlYWNoIG1hcmtlciBnZW5lIChiYXNlZCBvbiBDaElQc2Vla2VyIGFubm90YXRpb25zIGluIHRoaXMgdHV0b3JpYWwpLgoKYGBge3IsIGV2YWw9RkFMU0UsIG1lc3NhZ2U9RkFMU0V9CnJlZ2lvbjJnZW5lIDwtIGNpc1RvcGljT2JqZWN0QHJlZ2lvbi5kYXRhWywnU1lNQk9MJywgZHJvcD1GQUxTRV0KcmVnaW9uMmdlbmUgPC0gc3BsaXQocmVnaW9uMmdlbmUsIHJlZ2lvbjJnZW5lWywnU1lNQk9MJ10pIApyZWdpb24yZ2VuZSA8LSBsYXBwbHkocmVnaW9uMmdlbmUsIHJvd25hbWVzKSAKCiMgRnJvbSBwcmV0cmFpbmVkIEdhcm5ldHQncyBtb2RlbCBtYXJrZXJzIG9uIHBCTUMgZGF0YXNldCBmcm9tIDEwWCAoUGxpbmVyIGV0IGFsLCAyMDE5KQpzZWxlY3RlZEdlbmVzIDwtIGMoJ0NEMzQnLCAnVEhZMScsICdFTkcnLCAnS0lUJywgJ1BST00xJywgI0NEMzQrCiAgICAgICAgICAgICAgICAgICAnTkNBTTEnLCAnRkNHUjNBJywgI05LY2VsbHMKICAgICAgICAgICAgICAgICAgICdDRDE0JywgJ0ZDR1IxQScsICdDRDY4JywgJ1MxMDBBMTInLCAjTW9ub2N5dGVzCiAgICAgICAgICAgICAgICAgICAnQ0QxOScsICdNUzRBMScsICdDRDc5QScsICNCY2VsbHMKICAgICAgICAgICAgICAgICAgICdDRDNEJywgJ0NEM0UnLCAnQ0QzRycsICNUY2VsbHMKICAgICAgICAgICAgICAgICAgICdDRDQnLCAnRk9YUDMnLCAnSUwyUkEnLCAnSUw3UicsICNDRDQgVGNlbGwKICAgICAgICAgICAgICAgICAgICdDRDhBJywgJ0NEOEInLCAjQ0Q4IFRjZWxsCiAgICAgICAgICAgICAgICAgICAnSUwzUkEnLCAnQ0QxQycsICdCQVRGMycsICdUSEJEJywgJ0NEMjA5JyAjRGVuZHJpdGljIGNlbGxzCiAgICAgICAgICAgICAgICAgICApCnJlZ2lvbjJnZW5lX3N1YnNldCA8LSByZWdpb24yZ2VuZVt3aGljaChuYW1lcyhyZWdpb24yZ2VuZSkgJWluJSBzZWxlY3RlZEdlbmVzKV0KcHJlZE1hdFN1bUJ5R2VuZSA8LSBzYXBwbHkocmVnaW9uMmdlbmVfc3Vic2V0LCBmdW5jdGlvbih4KSBhcHBseShwcmVkLm1hdHJpeFt4LCwgZHJvcD1GXSwgMiwgc3VtKSkKcm93bmFtZXMocHJlZE1hdFN1bUJ5R2VuZSkgPC0gY2lzVG9waWNPYmplY3RAY2VsbC5uYW1lcwojIEFkZCB0byBjZWxsIGRhdGEKY2lzVG9waWNPYmplY3QgPC0gYWRkQ2VsbE1ldGFkYXRhKGNpc1RvcGljT2JqZWN0LCBwcmVkTWF0U3VtQnlHZW5lKQpgYGAKCmBgYHtyLCBmaWcuc2hvdz0naG9sZCcsIGZpZy5hbGlnbj0nY2VudGVyJywgbWVzc2FnZT1GQUxTRX0KcGFyKG1mcm93PWMoMSwyKSkKcGxvdEZlYXR1cmVzKGNpc1RvcGljT2JqZWN0LCBtZXRob2Q9J1VtYXAnLCB0YXJnZXQ9J2NlbGwnLCB0b3BpY19jb250cj1OVUxMLCBjb2xvckJ5PWMoJ0tJVCcsICdQUk9NMScsICdGQ0dSM0EnLCdDRDE0JywnUzEwMEExMicsICdNUzRBMScsICdDRDc5QScsICdDRDNEJywgJ0NEM0UnLCAnQ0Q0JywgJ0NEOEEnKSwgY2V4LmxlZ2VuZCA9IDAuOCwgZmFjdG9yLm1heD0uNzUsIGRpbT0yLCBsZWdlbmQ9VFJVRSwgaW50ZXJ2YWxzPTEwKQpgYGAKCkZpbmFsbHksIHlvdSBjYW4gc2F2ZSB5b3VyIGNpc1RvcGljIG9iamVjdDoKCmBgYHtyLCBldmFsID0gRkFMU0UsIG1lc3NhZ2U9RkFMU0V9CnNhdmVSRFMoY2lzVG9waWNPYmplY3QsIGZpbGU9J1dhcnBMREFfY2lzVG9waWNPYmplY3RfcGJtYy5SZHMnKQpgYGAKCiMgUmVmZXJlbmNlcwoKMS4gQmxlaSwgRC4gTS4sIE5nLCBBLiBZLiwgJiBKb3JkYW4sIE0uIEkuICgyMDAzKS4gTGF0ZW50IGRpcmljaGxldCBhbGxvY2F0aW9uLiAqSm91cm5hbCBvZiBtYWNoaW5lIExlYXJuaW5nIHJlc2VhcmNoKiwgMyhKYW4pLCA5OTMtMTAyMi4KMi4gU3RleXZlcnMsIE0uLCAmIEdyaWZmaXRocywgVC4gKDIwMDcpLiBQcm9iYWJpbGlzdGljIHRvcGljIG1vZGVscy4gKkhhbmRib29rIG9mIGxhdGVudCBzZW1hbnRpYyBhbmFseXNpcyosIDQyNyg3KSwgNDI0LTQ0MC4KMy4gQ2hlbiwgSi4sIExpLCBLLiwgWmh1LCBKLiwgJiBDaGVuLCBXLiAoMjAxNikuIFdhcnBsZGE6IGEgY2FjaGUgZWZmaWNpZW50IG8gKDEpIGFsZ29yaXRobSBmb3IgbGF0ZW50IGRpcmljaGxldCBhbGxvY2F0aW9uLiAqUHJvY2VlZGluZ3Mgb2YgdGhlIFZMREIgRW5kb3dtZW50KiwgOSgxMCksIDc0NC03NTUuCjQuIEN1c2Fub3ZpY2gsIEQuIEEuLCBSZWRkaW5ndG9uLCBKLiBQLiwgR2FyZmllbGQsIEQuIEEuLCBEYXphLCBSLiBNLiwgQWdoYW1pcnphaWUsIEQuLCBNYXJjby1GZXJyZXJlcywgUi4sIC4uLiAmIFRyYXBuZWxsLCBDLiAoMjAxOCkuIFRoZSBjaXMtcmVndWxhdG9yeSBkeW5hbWljcyBvZiBlbWJyeW9uaWMgZGV2ZWxvcG1lbnQgYXQgc2luZ2xlLWNlbGwgcmVzb2x1dGlvbi4gKk5hdHVyZSosIDU1NSg3Njk3KSwgNTM4Lgo1LiBBaWJhciwgUy4sIEJyYXZvIEdvbnrDoWxlei1CbGFzLCBDLiwgTW9lcm1hbiwgVC4sIEltcmljaG92YSwgSC4sIEh1bHNlbG1hbnMsIEcuLCBSYW1ib3csIEYuLCAuLi4gJiBBdGFrLCBaLiBLLiAoMjAxNykuIFNDRU5JQzogc2luZ2xlLWNlbGwgcmVndWxhdG9yeSBuZXR3b3JrIGluZmVyZW5jZSBhbmQgY2x1c3RlcmluZy4gKk5hdHVyZSBtZXRob2RzKiwgMTQoMTEpLCAxMDgzLgo2LiBNZWRpbmEtUml2ZXJhLCBBLiwgRGVmcmFuY2UsIE0uLCBTYW5kLCBPLiwgSGVycm1hbm4sIEMuLCBDYXN0cm8tTW9uZHJhZ29uLCBKLiBBLiwgRGVsZXJjZSwgSi4sIC4uLiAmIFN0YWluZXMsIEQuIE0uICgyMDE1KS4gUlNBVCAyMDE1OiByZWd1bGF0b3J5IHNlcXVlbmNlIGFuYWx5c2lzIHRvb2xzLiAqTnVjbGVpYyBhY2lkcyByZXNlYXJjaCosIDQzKFcxKSwgVzUwLVc1Ni4KNy4gSGVpbnosIFMuLCBCZW5uZXIsIEMuLCBTcGFubiwgTi4sIEJlcnRvbGlubywgRS4sIExpbiwgWS4gQy4sIExhc2xvLCBQLiwgLi4uICYgR2xhc3MsIEMuIEsuICgyMDEwKS4gU2ltcGxlIGNvbWJpbmF0aW9ucyBvZiBsaW5lYWdlLWRldGVybWluaW5nIHRyYW5zY3JpcHRpb24gZmFjdG9ycyBwcmltZSBjaXMtcmVndWxhdG9yeSBlbGVtZW50cyByZXF1aXJlZCBmb3IgbWFjcm9waGFnZSBhbmQgQiBjZWxsIGlkZW50aXRpZXMuICpNb2xlY3VsYXIgY2VsbCosIDM4KDQpLCA1NzYtNTg5Lgo4LiBDaGl1LCBULiBQLiwgWWFuZywgTC4sIFpob3UsIFQuLCBNYWluLCBCLiBKLiwgUGFya2VyLCBTLiBDLiwgTnV6aGRpbiwgUy4gVi4sIC4uLiAmIFJvaHMsIFIuICgyMDE0KS4gR0JzaGFwZTogYSBnZW5vbWUgYnJvd3NlciBkYXRhYmFzZSBmb3IgRE5BIHNoYXBlIGFubm90YXRpb25zLiAqTnVjbGVpYyBhY2lkcyByZXNlYXJjaCosIDQzKEQxKSwgRDEwMy1EMTA5Lgo5LiBQbGluZXIsIEguIEEuLCBTaGVuZHVyZSwgSi4sICYgVHJhcG5lbGwsIEMuICgyMDE5KS4gU3VwZXJ2aXNlZCBjbGFzc2lmaWNhdGlvbiBlbmFibGVzIHJhcGlkIGFubm90YXRpb24gb2YgY2VsbCBhdGxhc2VzLiAqQmlvUnhpdiosIDUzODY1Mi4KCiMgU2Vzc2lvbkluZm8KCmBgYHtyLCBtZXNzYWdlPUZBTFNFfQpzZXNzaW9uSW5mbygpCmBgYAo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiUnVubmluZyBHUkVBVCBhbmQgbW90aWYgZW5yaWNobWVudCB3aXRoIG1tMTAgYW5kIGhnMzgiCmF1dGhvcjogIkNhcm1lbiBCcmF2byBHb256w6FsZXotQmxhcyBhbmQgU3RlaW4gQWVydHMiCnZpZ25ldHRlOiA+CiAgJVxWaWduZXR0ZUluZGV4RW50cnl7UnVubmluZyBHUkVBVCBhbmQgbW90aWYgZW5yaWNobWVudCB3aXRoIG1tMTAgYW5kIGhnMzh9CiAgJVxWaWduZXR0ZUVuZ2luZXtrbml0cjo6cm1hcmtkb3dufQpvdXRwdXQ6IAogIGh0bWxfZG9jdW1lbnQ6CiAgICB0b2M6IHllcwogICAgdG9jX2Zsb2F0OiB5ZXMKICAgIG51bWJlcl9zZWN0aW9uczogZmFsc2UKICBwZGZfZG9jdW1lbnQ6CiAgICB0b2M6IHllcwogIGh0bWxfbm90ZWJvb2s6CiAgICB0b2M6IHllcwotLS0KCipWaWduZXR0ZSBidWlsdCBvbiBgciBmb3JtYXQoU3lzLnRpbWUoKSwgIiViICVkLCAlWSIpYCB3aXRoIGNpc1RvcGljICoqdmVyc2lvbiBgciBwYWNrYWdlVmVyc2lvbigiY2lzVG9waWMiKWAqKiouCgpUaGlzIHZpZ25ldHRlIHByb3ZpZGVzIHRoZSBjb2RlIHRvIHJ1biByR1JFQVQgd2l0aCB0aGUgaGczOCBhc3NlbWJseSBhbmQgUmNpc1RhcmdldCB3aXRoIGhnMzggYW5kIG1tMTAgYmFzZWQgb24gbGlmdG92ZXIuIAoKIyBJbnN0YWxsYXRpb24KCiMjIFIgPCAzLjUKCklmIHlvdXIgUiB2ZXJzaW9uIGlzIGJlbG93IDMuNSwgeW91IHdpbGwgbmVlZCB0byBpbnN0YWxsIG1hbnVhbGx5IHRoZSBmb2xsb3dpbmcgcGFja2FnZXM6CgpgYGB7ciwgZXZhbD1GQUxTRSwgcmVzdWx0cz0nYXNpcyd9CmRldnRvb2xzOjppbnN0YWxsX2dpdGh1YigiYWVydHNsYWIvQVVDZWxsIikKZGV2dG9vbHM6Omluc3RhbGxfZ2l0aHViKCJhZXJ0c2xhYi9SY2lzVGFyZ2V0IikKYGBgCgpgYGB7ciwgZXZhbD1GQUxTRSwgcmVzdWx0cz0nYXNpcyd9CnNvdXJjZSgiaHR0cHM6Ly9iaW9jb25kdWN0b3Iub3JnL2Jpb2NMaXRlLlIiKQpiaW9jTGl0ZSgnR2Vub21pY1JhbmdlcycpCmBgYAoKIyMgY2lzVG9waWMgcGFja2FnZQoKRm9yIGluc3RhbGxpbmcgY2lzVG9waWMgcnVuOgoKYGBge3IsIGV2YWw9RkFMU0UsIHJlc3VsdHM9J2FzaXMnfQpkZXZ0b29sczo6aW5zdGFsbF9naXRodWIoImFlcnRzbGFiL2Npc1RvcGljIikKYGBgCgojIFJ1bm5pbmcgckdSRUFUIGFuZCBSY2lzVGFyZ2V0IHdpdGggbW0xMCAKCmBgYHtyLCBldmFsPUZBTFNFfQojIEdSRUFUIGNhbiB3b3JrIGRpcmVjdGx5IG9uIG1tMTAgY29vcmRpbmF0ZXMKY2lzVG9waWNPYmplY3QgPC0gR1JFQVQoY2lzVG9waWNPYmplY3QsIGdlbm9tZT0nbW0xMCcsIGZvbGRfZW5yaWNobWVudD0yLCBnZW5lSGl0cz0xLCBzaWduPTAuMDUsIHJlcXVlc3RfaW50ZXJ2YWw9MTApCgojIEZvciB1c2luZyBSY2lzVGFyZ2V0LCB3ZSBuZWVkIHRvIGxpZnRvdmVyIHRoZSBjb29yZGluYXRlcyB0byB0aGUgbW05IGFzc2VtYmxlCmxpYnJhcnkoUi51dGlscykKdXJsIDwtICJodHRwOi8vaGdkb3dubG9hZC5zb2UudWNzYy5lZHUvZ29sZGVuUGF0aC9tbTEwL2xpZnRPdmVyL21tMTBUb01tOS5vdmVyLmNoYWluLmd6IgptbTEwVG9tbTkuY2hhaW4gPC0gIm1tMTBUb21tOS5vdmVyLmNoYWluIgpkb3dubG9hZC5maWxlKHVybCwgZGVzdGZpbGUgPSBwYXN0ZTAobW0xMFRvbW05LmNoYWluLCAiLmd6IikpCmd1bnppcChwYXN0ZTAobW0xMFRvbW05LmNoYWluLCAiLmd6IikpCgojIEltcG9ydCBjaGFpbiBmaWxlCm1tMTBUb21tOS5jaGFpbiAgPC0gaW1wb3J0LmNoYWluKG1tMTBUb21tOS5jaGFpbikKCiMgT2J0YWluIGxpZnRPdmVyIGRpY3Rpb25hcnkgKGFzIGxpc3QpCm1tMTBfY29vcmQgPC0gY2lzVG9waWNPYmplY3RAcmVnaW9uLnJhbmdlcwptbTEwX3RvX21tOV9saXN0IDwtIGxpZnRPdmVyKG1tMTBfY29vcmQsIG1tMTBUb21tOS5jaGFpbikKCiMgUnVuIEdSRUFUIGJhc2VkIG9uIGxpZnRvdmVyIHRvIG1tOSBjb29yZGluYXRlcwpjaXNUb3BpY09iamVjdCA8LSBiaW5hcml6ZWRjaXNUb3BpY3NUb0N0eChjaXNUb3BpY09iamVjdCwgbGlmdE92ZXI9bW0xMF90b19tbTlfbGlzdCwgZ2Vub21lPSdtbTknKQpjaXNUb3BpY09iamVjdCA8LSBzY29yZWRSZWdpb25zVG9DdHgoY2lzVG9waWNPYmplY3QsIGxpZnRPdmVyPW1tMTBfdG9fbW05X2xpc3QsIGdlbm9tZT0nbW05JykKcGF0aFRvRmVhdGhlciA8LSAnbW05LURIU19lbmhfcHJvbV9wZW5uc3RhdGUtOXNwZWNpZXMuYWxsX3JlZ2lvbnMubWM5bnIuZmVhdGhlcicKY2lzVG9waWNPYmplY3QgPC0gdG9waWNzUmNpc1RhcmdldChjaXNUb3BpY09iamVjdCwgZ2Vub21lPSdtbTknLCBwYXRoVG9GZWF0aGVyLCByZWR1Y2VkX2RhdGFiYXNlPUZBTFNFLCBuZXNUaHJlc2hvbGQ9Mywgcm9jdGhyPTAuMDA1LCBtYXhSYW5rPTIwMDAwLCBuQ29yZXM9NCkKY2lzVG9waWNPYmplY3Q8LSBnZXRDaXN0cm9tZXMoY2lzVG9waWNPYmplY3QsIGFubm90YXRpb24gPSAnQm90aCcsIG5Db3Jlcz01KQpgYGAKCiMgUnVubmluZyByR1JFQVQgYW5kIFJjaXNUYXJnZXQgd2l0aCBoZzM4IAoKYGBge3IsIGV2YWw9RkFMU0V9CiMgdXJsIGFuZCBmaWxlIG5hbWUgZm9yIGEgY2hhaW4gZmlsZQpsaWJyYXJ5KFIudXRpbHMpCnVybCA8LSAiaHR0cDovL2hnZG93bmxvYWQuc29lLnVjc2MuZWR1L2dvbGRlblBhdGgvaGczOC9saWZ0T3Zlci9oZzM4VG9IZzE5Lm92ZXIuY2hhaW4uZ3oiCmhnMzhUb0hnMTkuY2hhaW4gPC0gImRhdGEvaGczOFRvSGcxOS5vdmVyLmNoYWluIgpkb3dubG9hZC5maWxlKHVybCwgZGVzdGZpbGUgPSBwYXN0ZTAoaGczOFRvSGcxOS5jaGFpbiwgIi5neiIpKQpndW56aXAocGFzdGUwKGhnMzhUb0hnMTkuY2hhaW4sICIuZ3oiKSkKCiMgSW1wb3J0IGNoYWluIGZpbGUKaGczOFRvSGcxOS5jaGFpbiA8LSBpbXBvcnQuY2hhaW4oaGczOFRvSGcxOS5jaGFpbikKCiMgT2J0YWluIGxpZnRPdmVyIGRpY3Rpb25hcnkgKGFzIGxpc3QpCmhnMzhfY29vcmQgPC0gY2lzVG9waWNPYmplY3RAcmVnaW9uLnJhbmdlcwpoZzM4X3RvX2hnMTlfbGlzdCA8LSBsaWZ0T3ZlcihoZzM4X2Nvb3JkLCBoZzM4VG9IZzE5LmNoYWluKQoKIyBSdW4gR1JFQVQgYmFzZWQgb24gbGlmdG92ZXIgdG8gaGcxOSBjb29yZGluYXRlcwpjaXNUb3BpY09iamVjdCA8LSBHUkVBVChjaXNUb3BpY09iamVjdCwgZ2Vub21lPSdoZzE5JywgbGlmdE92ZXI9aGczOF90b19oZzE5X2xpc3QsIGZvbGRfZW5yaWNobWVudD0yLCBnZW5lSGl0cz0xLCBzaWduPTAuMDUsIHJlcXVlc3RfaW50ZXJ2YWw9MTApCgojIFJ1biBHUkVBVCBiYXNlZCBvbiBsaWZ0b3ZlciB0byBoZzE5IGNvb3JkaW5hdGVzCmNpc1RvcGljT2JqZWN0IDwtIGJpbmFyaXplZGNpc1RvcGljc1RvQ3R4KGNpc1RvcGljT2JqZWN0LCBsaWZ0T3Zlcj1oZzM4X3RvX2hnMTlfbGlzdCwgZ2Vub21lPSJoZzE5IikKY2lzVG9waWNPYmplY3QgPC0gc2NvcmVkUmVnaW9uc1RvQ3R4KGNpc1RvcGljT2JqZWN0LCBsaWZ0T3Zlcj1oZzM4X3RvX2hnMTlfbGlzdCwgZ2Vub21lPSJoZzE5IikKcGF0aFRvRmVhdGhlciA8LSAiaGcxOS1yZWdpb25zLTFNLTlzcGVjaWVzLmFsbF9yZWdpb25zLm1jOW5yLmZlYXRoZXIiCmNpc1RvcGljT2JqZWN0IDwtIHRvcGljc1JjaXNUYXJnZXQoY2lzVG9waWNPYmplY3QsIGdlbm9tZT0naGcxOScsIHBhdGhUb0ZlYXRoZXIsIHJlZHVjZWRfZGF0YWJhc2U9RkFMU0UsIG5lc1RocmVzaG9sZD0zLCByb2N0aHI9MC4wMDUsIG1heFJhbms9MjAwMDAsIG5Db3Jlcz0xKQpjaXNUb3BpY09iamVjdDwtIGdldENpc3Ryb21lcyhjaXNUb3BpY09iamVjdCwgYW5ub3RhdGlvbiA9ICdCb3RoJywgbkNvcmVzPTUpCmBgYAoKCgo=</div>
 
 
 
@@ -2576,7 +1921,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeSourceEmbed("10X_multiome_workflow.Rmd");
+  window.initializeSourceEmbed("Runningwithmm10andhg38.Rmd");
   window.initializeCodeFolding("show" === "show");
 });
 </script>
