@@ -1,3 +1,93 @@
+#' Initialize and setup the cisTopic object starting from 10X Multiome output.
+#'
+#' Initializes the cisTopic object from CellRanger ATAC output files and defined regions. 
+#' @param barcodesFile cell/rna and atac barcodes.''
+#' @param featuresFile rna and atac features.
+#' @param readsfn matrix of reads
+#' @param metrics List of CellRanger barcodes and their metrics (/outs/singlecell.csv)
+#' @param project.name Project name (string).
+#' @param min.cells Minimal number of cells in which the region has to be accessible. By default, all regions accessible in at least one cell are kept.
+#' @param min.regions Minimal number of regions that have to be accessible within a cell to be kept. By default, all cells with at least one region accessible are kept.
+#' @param is.acc Number of counts necessary to consider a region as accessible.
+#' @param keepCountsMatrix Whether to keep the counts matrix or not inside the object. For large matrices, we recommend to set this
+#' to FALSE.
+#' @return Returns a cisTopic object with the counts data stored in object@@count.matrix.
+#' object@@binary.count.matrix, object@@cell.names, object@@cell.data (including counting statistics), object@@regions.ranges, object@@regions.data are also initialized.
+#'
+#' @import Matrix
+#' 
+#' @export
+#'
+#' @examples
+#' data_folder <- '/outs/filtered_peak_bc_matrix'
+#' cisTopicObject <- createcisTopicObjectFrom10Xmatrix(data_folder, metrics)
+#' cisTopicObject
+
+createcisTopicObjectFrom10Xmatrix <- function(
+    barcodesFile,
+    featuresFile,
+    readsfn,
+    metrics,
+    project.name = "cisTopicProject",
+    min.cells = 1,
+    min.regions = 1,
+    is.acc = 1,
+    keepCountsMatrix = TRUE,
+    ...
+) {
+  print("checking dependencies")
+  
+  if(! "Matrix" %in% installed.packages()){
+    stop('Please, install Matrix: \n install.packages("Matrix")')
+  } else {
+    suppressMessages(require(Matrix))
+  }
+  
+  # Prepare barcodes and metrics
+  CR_metrics <- fread(metrics, header = T, sep = ',')
+  CR_metrics <- CR_metrics[,-c(2,3)] # the first 2 columns of a multiome file will be scRNA-seq barcodes
+  CR_metrics <- as.data.frame(CR_metrics)
+  rownames(CR_metrics) <- unlist(as.vector(CR_metrics[,1]))
+  CR_metrics <- CR_metrics[,-1]
+  
+  if(file.exists(barcodesFile)) barcodes <- read.table(barcodesFile)[,1]
+  
+  # mask rna features
+  
+  if(file.exists(featuresFile)) features <- fread(featuresFile)
+  colnames(features) = c("geneid","genesymbol","modality","chromosome","start","end")
+  
+  m <- readMM(readsfn)
+  colnames(m) <- barcodes
+  
+  m = m[which(features$modality == "Peaks"),]
+  subset_rows <- features[features$modality == "Peaks", ]
+  rownames(m) = with(subset_rows, paste(chromosome, paste(start, end, sep="-"), sep=":"))
+  
+  head(CR_metrics[barcodes,])
+  
+  # Prepare cell data
+  print('Creating cisTopic object...')
+  count.matrix <- m
+  
+  if(any(!barcodes %in% rownames(CR_metrics))) warning("Some barcodes are missing from the metrics, the count matrix might include empty droplets (e.g. non-cells).")
+  CR_metrics <- CR_metrics[barcodes,,drop=FALSE]
+  rownames(CR_metrics) <- barcodes
+  cell.data <- CR_metrics
+  colnames(cell.data) <- paste0('10X_', colnames(cell.data))
+  
+  object <- createcisTopicObject(count.matrix = count.matrix, 
+                                 project.name = project.name,
+                                 min.cells = min.cells,
+                                 min.regions = min.regions,
+                                 is.acc = is.acc,
+                                 keepCountsMatrix=keepCountsMatrix)
+  
+  object <- addCellMetadata(object, cell.data = as.data.frame(cell.data))
+  return(object)
+}
+
+
 #' Initialize and setup the cisTopic object starting from CellRanger ATAC output matrix.
 #'
 #' Initializes the cisTopic object from CellRanger ATAC output files and defined regions. 
